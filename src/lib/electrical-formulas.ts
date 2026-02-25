@@ -23,6 +23,13 @@ export const MATERIAL_K = {
 export type InstallationType = 'FREE' | 'WALL' | 'ROW' | 'RECESSED';
 
 /**
+ * Secciones comerciales normalizadas (mm²) según IEC 60228 / IRAM 2178.
+ */
+export const COMMERCIAL_SECTIONS = [
+  1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240, 300
+];
+
+/**
  * IEC 60364-5-52: Selección y montaje de equipos eléctricos - Canalizaciones.
  * Tabla de ampacidad simplificada para Método de Instalación C (Cables sobre pared).
  * Aislamiento PVC 70°C, Temp. ambiente 30°C.
@@ -46,7 +53,12 @@ const IEC_AMPACITY_TABLE = [
   { section: 300, current: 367 },
 ];
 
-const getIECSection = (current: number): number => {
+const getCommercialSection = (calculated: number): number => {
+  const match = COMMERCIAL_SECTIONS.find(s => s >= calculated);
+  return match || COMMERCIAL_SECTIONS[COMMERCIAL_SECTIONS.length - 1];
+};
+
+const getAmpacitySection = (current: number): number => {
   const safetyFactor = 1.25;
   const targetCurrent = current * safetyFactor;
   const match = IEC_AMPACITY_TABLE.find(entry => entry.current >= targetCurrent);
@@ -124,22 +136,61 @@ export const calculateCableSection = (
   maxVoltageDrop: number,
   system: SystemType,
   material: keyof typeof CONDUCTIVITY = 'COBRE',
-  powerFactor: number = 1
-): number => {
-  if (maxVoltageDrop === 0) return 0;
+  powerFactor: number = 1,
+  includeNeutral: boolean = false,
+  isSingleCore: boolean = false
+) => {
+  if (maxVoltageDrop === 0) return { section: 0, commercial: 0, formation: '' };
   const k = CONDUCTIVITY[material];
   
+  let calculated = 0;
   switch (system) {
     case 'DC':
     case 'MONO':
-      return (2 * length * current * powerFactor) / (k * maxVoltageDrop);
     case 'BI':
-      return (2 * length * current * powerFactor) / (k * maxVoltageDrop);
+      calculated = (2 * length * current * powerFactor) / (k * maxVoltageDrop);
+      break;
     case 'TRI':
-      return (Math.sqrt(3) * length * current * powerFactor) / (k * maxVoltageDrop);
-    default:
-      return 0;
+      calculated = (Math.sqrt(3) * length * current * powerFactor) / (k * maxVoltageDrop);
+      break;
   }
+
+  const ampacitySection = getAmpacitySection(current);
+  const finalCalculated = Math.max(calculated, ampacitySection);
+  const commercial = getCommercialSection(finalCalculated);
+
+  let formation = "";
+  const groundText = " + PE";
+  const neutralText = includeNeutral ? " + N" : "";
+
+  switch (system) {
+    case 'DC':
+      formation = isSingleCore ? `2x (1x${commercial})` : `2x${commercial}`;
+      break;
+    case 'MONO':
+    case 'BI':
+      formation = isSingleCore ? `2x (1x${commercial})` + groundText : `3x${commercial}`;
+      break;
+    case 'TRI':
+      if (isSingleCore) {
+        formation = includeNeutral ? `4x (1x${commercial})` + groundText : `3x (1x${commercial})` + groundText;
+      } else {
+        formation = includeNeutral ? `5x${commercial}` : `4x${commercial}`;
+      }
+      break;
+  }
+
+  const descriptiveLabel = system === 'TRI' 
+    ? (includeNeutral ? "3P + N + T" : "3P + T")
+    : (system === 'DC' ? "2P" : "1P + N + T");
+
+  return {
+    section: finalCalculated,
+    commercial,
+    formation,
+    descriptiveLabel,
+    isSingleCore
+  };
 };
 
 export const calculatePanelCooling = (
@@ -200,8 +251,8 @@ export const calculateStarDelta = (
   const nominalCurrent = denominator > 0 ? power / denominator : 0;
   const iPhase = nominalCurrent / Math.sqrt(3);
   const iStar = nominalCurrent / 3;
-  const sectionMain = getIECSection(nominalCurrent);
-  const sectionMotor = getIECSection(iPhase);
+  const sectionMain = getAmpacitySection(nominalCurrent);
+  const sectionMotor = getAmpacitySection(iPhase);
   
   return {
     nominalCurrent,
@@ -216,7 +267,6 @@ export const calculateStarDelta = (
 
 /**
  * Cálculo de transmisión mecánica.
- * Relación i = d2 / d1 = z2 / z1 = n1 / n2
  */
 export interface TransmissionStage {
   input: number; // Dientes o diámetro entrada
@@ -230,7 +280,6 @@ export const calculateTransmission = (
   isLinear: boolean = false,
   lead: number = 5 // Paso en mm/rev (Lead)
 ) => {
-  // Relación total I = i1 * i2 * ... * in
   let totalRatio = 1;
   stages.forEach(stage => {
     if (stage.input > 0 && stage.output > 0) {
@@ -241,20 +290,16 @@ export const calculateTransmission = (
   let resultValue = 0;
   
   if (!isLinear) {
-    // Modo Rotativo (RPM)
     if (mode === 'FORWARD') {
       resultValue = totalRatio > 0 ? speed / totalRatio : 0;
     } else {
       resultValue = speed * totalRatio;
     }
   } else {
-    // Modo Lineal (mm/s)
     if (mode === 'FORWARD') {
-      // De RPM motor a mm/s: (RPM_motor / 60) * (1 / ratio) * lead
       const outputRps = (speed / 60) * (1 / totalRatio);
       resultValue = outputRps * lead;
     } else {
-      // De mm/s a RPM motor: (mm_s / lead) * ratio * 60
       const outputRps = speed / lead;
       resultValue = outputRps * totalRatio * 60;
     }

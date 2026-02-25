@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { 
   SystemType, 
   InstallationType,
@@ -37,6 +38,8 @@ export default function CalculatorForm() {
   const [length, setLength] = useState("50");
   const [section, setSection] = useState("2.5");
   const [maxVd, setMaxVd] = useState("11.4");
+  const [includeNeutral, setIncludeNeutral] = useState(false);
+  const [isSingleCore, setIsSingleCore] = useState(false);
 
   // Inputs Climatización
   const [panelW, setPanelW] = useState("800");
@@ -97,7 +100,7 @@ export default function CalculatorForm() {
         res = calculateCurrent(powerNum, voltageNum, system, system === 'DC' ? 1 : pfNum);
         break;
       case "seccion":
-        res = calculateCableSection(currentNum, lengthNum, maxVdNum, system, material, system === 'DC' ? 1 : pfNum);
+        res = calculateCableSection(currentNum, lengthNum, maxVdNum, system, material, system === 'DC' ? 1 : pfNum, includeNeutral, isSingleCore);
         break;
       case "caida":
         res = calculateVoltageDrop(currentNum, lengthNum, sectionNum, system, material, system === 'DC' ? 1 : pfNum);
@@ -136,13 +139,13 @@ export default function CalculatorForm() {
     switch(activeTab) {
       case "seccion":
       case "caida":
-        return "IEC 60364-5-52";
+        return "IEC 60364 / IRAM 2178";
       case "climatizacion":
         return "IEC 60890";
       case "estrella":
         return "IEC 60947-4-1";
       case "transmision":
-        return transMotionType === 'LINEAR' ? "ISO 13012 (Husillos)" : "ISO 6336 / DIN 3960";
+        return transMotionType === 'LINEAR' ? "ISO 13012" : "ISO 6336";
       default:
         return "IEC 60038 / 60364";
     }
@@ -190,6 +193,30 @@ export default function CalculatorForm() {
                         <SelectItem value="TRI">400V Trifásico</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                )}
+
+                {activeTab === "seccion" && (
+                  <div className="p-4 bg-primary/5 rounded-2xl space-y-4 border border-primary/10">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-bold">Tipo de Cableado</Label>
+                        <p className="text-[10px] text-muted-foreground">Unifilar (Cables separados) vs Multipolar (Vainas)</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{isSingleCore ? 'Unifilar' : 'Multipolar'}</span>
+                        <Switch checked={isSingleCore} onCheckedChange={setIsSingleCore} />
+                      </div>
+                    </div>
+                    {system === 'TRI' && (
+                      <div className="flex items-center justify-between pt-2 border-t border-primary/10">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-bold">Incluir Neutro</Label>
+                          <p className="text-[10px] text-muted-foreground">Cálculo para 3P+N+PE vs 3P+PE</p>
+                        </div>
+                        <Switch checked={includeNeutral} onCheckedChange={setIncludeNeutral} />
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -417,6 +444,45 @@ export default function CalculatorForm() {
                   <div className="text-muted-foreground relative z-10 py-12">
                     <Info className="h-16 w-16 mx-auto mb-6 text-primary/20" />
                     <p className="text-sm font-medium px-4">Complete los parámetros técnicos para generar el informe basado en normativa IEC.</p>
+                  </div>
+                ) : activeTab === "seccion" && typeof result === 'object' && 'commercial' in result ? (
+                  <div className="w-full space-y-6 relative z-10">
+                    <div>
+                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5">SECCIÓN COMERCIAL RECOMENDADA</p>
+                      <h3 className="text-6xl md:text-7xl font-black text-primary tabular-nums tracking-tighter">
+                        {result.commercial}
+                        <span className="text-2xl ml-2 text-primary/60">mm²</span>
+                      </h3>
+                      <p className="text-[11px] text-muted-foreground mt-1 font-bold">Cálculo teórico: {result.section?.toFixed(2)} mm²</p>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-2xl border-2 border-accent/20 shadow-lg scale-105">
+                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">FORMACIÓN DEL CONDUCTOR</p>
+                      <div className="space-y-2">
+                        <span className="text-3xl font-black text-accent block">
+                          {result.formation}
+                        </span>
+                        <div className="flex justify-center gap-2">
+                           <span className="px-2 py-1 bg-accent/10 text-accent text-[9px] font-black rounded uppercase">
+                             {result.descriptiveLabel}
+                           </span>
+                           <span className="px-2 py-1 bg-primary/10 text-primary text-[9px] font-black rounded uppercase">
+                             {result.isSingleCore ? 'UNIFILAR' : 'MULTIPOLAR'}
+                           </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3 mt-4 text-left">
+                      <div className="bg-primary/5 p-3 rounded-xl border border-dashed text-[10px] leading-tight">
+                        <p className="font-bold text-primary mb-1">NOTAS TÉCNICAS:</p>
+                        <ul className="space-y-1 text-muted-foreground">
+                          <li>• Verificado por Ampacidad (IEC 60364-5-52).</li>
+                          <li>• Verificado por Caída de Tensión.</li>
+                          <li>• Formación sugerida para cable tipo subterráneo / industrial.</li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 ) : activeTab === "transmision" && typeof result === 'object' && 'resultValue' in result ? (
                   <div className="w-full space-y-6 relative z-10">
