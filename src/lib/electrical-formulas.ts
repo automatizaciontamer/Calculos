@@ -162,11 +162,24 @@ export const calculatePanelCooling = (
   };
 };
 
-export const calculateStarDelta = (nominalCurrent: number) => {
+export const calculateStarDelta = (
+  power: number,
+  voltage: number,
+  pf: number,
+  efficiency: number
+) => {
+  // Corriente Nominal: P / (sqrt(3) * V * cosphi * rendimiento)
+  const denominator = Math.sqrt(3) * voltage * pf * (efficiency / 100);
+  const nominalCurrent = denominator > 0 ? power / denominator : 0;
+  
+  // En Estrella-Triángulo:
+  // Corriente de fase (por los devanados en Delta): In / sqrt(3)
   const iPhase = nominalCurrent / Math.sqrt(3);
+  // Corriente en el contactor de Estrella: In / 3
   const iStar = nominalCurrent / 3;
   
   return {
+    nominalCurrent,
     relaySetting: iPhase,
     contactorMain: iPhase,
     contactorDelta: iPhase,

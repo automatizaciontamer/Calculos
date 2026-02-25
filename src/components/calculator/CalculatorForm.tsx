@@ -27,13 +27,14 @@ export default function CalculatorForm() {
   const [material, setMaterial] = useState<keyof typeof CONDUCTIVITY>("COBRE");
   
   // Inputs Generales
-  const [v, setV] = useState("220");
+  const [v, setV] = useState("380");
   const [i, setI] = useState("10");
-  const [p, setP] = useState("2200");
-  const [pf, setPf] = useState("0.9");
+  const [p, setP] = useState("7500");
+  const [pf, setPf] = useState("0.85");
+  const [eff, setEff] = useState("90"); // Rendimiento (%)
   const [length, setLength] = useState("50");
   const [section, setSection] = useState("2.5");
-  const [maxVd, setMaxVd] = useState("6.6");
+  const [maxVd, setMaxVd] = useState("11.4");
 
   // Inputs Climatización
   const [panelW, setPanelW] = useState("800");
@@ -59,6 +60,7 @@ export default function CalculatorForm() {
     const currentNum = parseFloat(i) || 0;
     const powerNum = parseFloat(p) || 0;
     const pfNum = parseFloat(pf) || 1;
+    const effNum = parseFloat(eff) || 100;
     const lengthNum = parseFloat(length) || 0;
     const sectionNum = parseFloat(section) || 0;
     const maxVdNum = parseFloat(maxVd) || 0;
@@ -92,7 +94,7 @@ export default function CalculatorForm() {
         );
         break;
       case "estrella":
-        res = calculateStarDelta(currentNum);
+        res = calculateStarDelta(powerNum, voltageNum, pfNum, effNum);
         break;
     }
     setResult(res);
@@ -198,16 +200,33 @@ export default function CalculatorForm() {
                       <Input type="number" value={tExt} onChange={(e) => setTExt(e.target.value)} />
                     </div>
                   </div>
+                ) : activeTab === "estrella" ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Potencia (W)</Label>
+                      <Input type="number" value={p} onChange={(e) => setP(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Tensión (V)</Label>
+                      <Input type="number" value={v} onChange={(e) => setV(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Factor de Potencia (cos φ)</Label>
+                      <Input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Rendimiento η (%)</Label>
+                      <Input type="number" value={eff} onChange={(e) => setEff(e.target.value)} />
+                    </div>
+                  </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {activeTab !== "estrella" && (
-                      <div className="space-y-2">
-                        <Label>Tensión (V)</Label>
-                        <Input type="number" value={v} onChange={(e) => setV(e.target.value)} />
-                      </div>
-                    )}
                     <div className="space-y-2">
-                      <Label>Corriente {activeTab === "estrella" ? "Nominal" : ""}(A)</Label>
+                      <Label>Tensión (V)</Label>
+                      <Input type="number" value={v} onChange={(e) => setV(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Corriente (A)</Label>
                       <Input type="number" value={i} onChange={(e) => setI(e.target.value)} />
                     </div>
                     {activeTab === "corriente" && (
@@ -216,7 +235,7 @@ export default function CalculatorForm() {
                         <Input type="number" value={p} onChange={(e) => setP(e.target.value)} />
                       </div>
                     )}
-                    {system !== "DC" && activeTab !== "estrella" && (
+                    {system !== "DC" && (
                       <div className="space-y-2">
                         <Label>cos φ</Label>
                         <Input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} />
@@ -294,14 +313,26 @@ export default function CalculatorForm() {
                   </div>
                 ) : activeTab === "estrella" && typeof result === 'object' && 'relaySetting' in result ? (
                   <div className="w-full space-y-4">
-                    <p className="text-sm font-bold text-primary uppercase tracking-widest">Ajuste Relé Térmico</p>
-                    <h3 className="text-5xl font-black text-primary">
-                      {result.relaySetting?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                      <span className="text-2xl ml-2">A</span>
-                    </h3>
+                    <div className="mb-6">
+                      <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Corriente Nominal (In)</p>
+                      <h3 className="text-4xl font-black text-primary">
+                        {result.nominalCurrent?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        <span className="text-xl ml-2">A</span>
+                      </h3>
+                    </div>
+                    
+                    <div className="p-4 bg-white rounded-xl border-2 border-primary/10 shadow-sm">
+                      <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Ajuste Relé Térmico (Ir)</p>
+                      <h3 className="text-5xl font-black text-primary">
+                        {result.relaySetting?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        <span className="text-2xl ml-2">A</span>
+                      </h3>
+                      <p className="text-[10px] text-muted-foreground mt-1 font-medium">Relé colocado en serie con fase motor</p>
+                    </div>
+
                     <div className="grid grid-cols-1 gap-2 mt-4 text-sm">
                       <div className="flex justify-between p-2 bg-white rounded border">
-                        <span>Contactor Delta (KM2):</span>
+                        <span>Contactor Main/Delta (KM1/KM2):</span>
                         <span className="font-bold">{result.contactorDelta?.toFixed(1)} A</span>
                       </div>
                       <div className="flex justify-between p-2 bg-white rounded border">
@@ -336,10 +367,10 @@ export default function CalculatorForm() {
           </div>
         </Card>
         <Card className="p-4 bg-muted/30 border-dashed flex gap-3">
-          <Wind className="h-6 w-6 text-accent shrink-0" />
+          <Activity className="h-6 w-6 text-accent shrink-0" />
           <div className="text-sm">
-            <h5 className="font-bold">Carga de Variadores</h5>
-            <p className="text-muted-foreground">Se asume una pérdida promedio del 3% para variadores estándar. Esto incluye las pérdidas por conmutación y resistencia interna.</p>
+            <h5 className="font-bold">Diseño Estrella-Triángulo</h5>
+            <p className="text-muted-foreground">El relé térmico debe ajustarse a In / 1.73 si se instala en los cables que van al motor (lo más común en industria).</p>
           </div>
         </Card>
       </div>
