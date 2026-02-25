@@ -226,7 +226,9 @@ export interface TransmissionStage {
 export const calculateTransmission = (
   speed: number,
   stages: TransmissionStage[],
-  mode: 'FORWARD' | 'REVERSE'
+  mode: 'FORWARD' | 'REVERSE',
+  isLinear: boolean = false,
+  lead: number = 5 // Paso en mm/rev (Lead)
 ) => {
   // Relación total I = i1 * i2 * ... * in
   let totalRatio = 1;
@@ -236,18 +238,32 @@ export const calculateTransmission = (
     }
   });
 
-  let resultSpeed = 0;
-  if (mode === 'FORWARD') {
-    // Dada n_motor, calcular n_final: n2 = n1 / totalRatio
-    resultSpeed = totalRatio > 0 ? speed / totalRatio : 0;
+  let resultValue = 0;
+  
+  if (!isLinear) {
+    // Modo Rotativo (RPM)
+    if (mode === 'FORWARD') {
+      resultValue = totalRatio > 0 ? speed / totalRatio : 0;
+    } else {
+      resultValue = speed * totalRatio;
+    }
   } else {
-    // Dada n_final, calcular n_motor: n1 = n2 * totalRatio
-    resultSpeed = speed * totalRatio;
+    // Modo Lineal (mm/s)
+    if (mode === 'FORWARD') {
+      // De RPM motor a mm/s: (RPM_motor / 60) * (1 / ratio) * lead
+      const outputRps = (speed / 60) * (1 / totalRatio);
+      resultValue = outputRps * lead;
+    } else {
+      // De mm/s a RPM motor: (mm_s / lead) * ratio * 60
+      const outputRps = speed / lead;
+      resultValue = outputRps * totalRatio * 60;
+    }
   }
 
   return {
-    resultSpeed,
+    resultValue,
     totalRatio,
-    stagesCount: stages.length
+    stagesCount: stages.length,
+    isLinear
   };
 };

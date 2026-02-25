@@ -21,7 +21,7 @@ import {
   TransmissionStage,
   CONDUCTIVITY 
 } from "@/lib/electrical-formulas";
-import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake, Settings2, Plus, Trash2, ArrowRightLeft } from "lucide-react";
+import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake, Settings2, Plus, Trash2, ArrowRightLeft, MoveHorizontal } from "lucide-react";
 
 export default function CalculatorForm() {
   const [activeTab, setActiveTab] = useState("potencia");
@@ -50,10 +50,12 @@ export default function CalculatorForm() {
   const [panelMaterial, setPanelMaterial] = useState<keyof typeof MATERIAL_K>("CHAPA_PINTADA");
   const [installation, setInstallation] = useState<InstallationType>("WALL");
 
-  // Inputs Transmisión
+  // Inputs Transmisión / Mecánica
   const [transSpeed, setTransSpeed] = useState("1450");
   const [transMode, setTransMode] = useState<'FORWARD' | 'REVERSE'>('FORWARD');
-  const [transStages, setTransStages] = useState<TransmissionStage[]>([{ input: 10, output: 40 }]);
+  const [transMotionType, setTransMotionType] = useState<'ROTARY' | 'LINEAR'>('ROTARY');
+  const [linearLead, setLinearLead] = useState("5"); // mm/rev
+  const [transStages, setTransStages] = useState<TransmissionStage[]>([{ input: 1, output: 1 }]);
 
   // Results
   const [result, setResult] = useState<any>(null);
@@ -118,7 +120,13 @@ export default function CalculatorForm() {
         res = calculateStarDelta(powerNum, voltageNum, pfNum, effNum);
         break;
       case "transmision":
-        res = calculateTransmission(parseFloat(transSpeed), transStages, transMode);
+        res = calculateTransmission(
+          parseFloat(transSpeed), 
+          transStages, 
+          transMode, 
+          transMotionType === 'LINEAR', 
+          parseFloat(linearLead)
+        );
         break;
     }
     setResult(res);
@@ -134,7 +142,7 @@ export default function CalculatorForm() {
       case "estrella":
         return "IEC 60947-4-1";
       case "transmision":
-        return "ISO 6336 / DIN 3960";
+        return transMotionType === 'LINEAR' ? "ISO 13012 (Husillos)" : "ISO 6336 / DIN 3960";
       default:
         return "IEC 60038 / 60364";
     }
@@ -154,9 +162,6 @@ export default function CalculatorForm() {
           <CardDescription className="text-sm md:text-base font-medium">
             Dimensionamiento profesional de sistemas eléctricos y transmisiones mecánicas
           </CardDescription>
-          <div className="sm:hidden mt-2 inline-flex bg-primary/10 text-primary text-[10px] font-bold px-3 py-1 rounded-full items-center gap-1">
-            <ShieldCheck className="h-3 w-3" /> {getNormativeReference()}
-          </div>
         </CardHeader>
         <CardContent className="px-4 md:px-8 pb-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -192,24 +197,49 @@ export default function CalculatorForm() {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-xs uppercase font-bold text-muted-foreground">Modo de Cálculo</Label>
-                        <Select value={transMode} onValueChange={(v) => setTransMode(v as any)}>
+                        <Label className="text-xs uppercase font-bold text-muted-foreground">Tipo de Movimiento</Label>
+                        <Select value={transMotionType} onValueChange={(v) => setTransMotionType(v as any)}>
                           <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="FORWARD">Calcular Velocidad Salida</SelectItem>
-                            <SelectItem value="REVERSE">Calcular Velocidad Motor</SelectItem>
+                            <SelectItem value="ROTARY">Rotativo (RPM)</SelectItem>
+                            <SelectItem value="LINEAR">Lineal (mm/s)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs uppercase font-bold text-muted-foreground">{transMode === 'FORWARD' ? 'RPM Motor' : 'RPM Salida Req.'}</Label>
+                        <Label className="text-xs uppercase font-bold text-muted-foreground">Modo de Cálculo</Label>
+                        <Select value={transMode} onValueChange={(v) => setTransMode(v as any)}>
+                          <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="FORWARD">
+                              {transMotionType === 'LINEAR' ? 'Calcular Desplazamiento' : 'Calcular Velocidad Final'}
+                            </SelectItem>
+                            <SelectItem value="REVERSE">
+                              Calcular Velocidad Motor
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs uppercase font-bold text-muted-foreground">
+                          {transMode === 'FORWARD' ? 'Velocidad Motor (RPM)' : (transMotionType === 'LINEAR' ? 'Velocidad Final (mm/s)' : 'Velocidad Final (RPM)')}
+                        </Label>
                         <Input type="number" value={transSpeed} onChange={(e) => setTransSpeed(e.target.value)} className="h-11 rounded-xl" />
                       </div>
+                      {transMotionType === 'LINEAR' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs uppercase font-bold text-muted-foreground">Paso / Avance (mm/rev)</Label>
+                          <Input type="number" value={linearLead} onChange={(e) => setLinearLead(e.target.value)} className="h-11 rounded-xl" placeholder="Ejem: 5mm (husillo)" />
+                        </div>
+                      )}
                     </div>
                     
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <Label className="text-primary font-bold">Etapas de Transmisión</Label>
+                        <Label className="text-primary font-bold">Relación de Transmisión (Reductora)</Label>
                         <Button variant="outline" size="sm" onClick={handleAddStage} className="h-8 gap-1.5 rounded-full text-xs">
                           <Plus className="h-3 w-3" /> Nueva Etapa
                         </Button>
@@ -292,14 +322,6 @@ export default function CalculatorForm() {
                       <Input type="number" value={panelH} onChange={(e) => setPanelH(e.target.value)} className="h-11 rounded-xl" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase font-bold text-muted-foreground">Otras Cargas (W)</Label>
-                      <Input type="number" value={otherPowerLoss} onChange={(e) => setOtherPowerLoss(e.target.value)} className="h-11 rounded-xl" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase font-bold text-muted-foreground">Profundo (mm)</Label>
-                      <Input type="number" value={panelD} onChange={(e) => setPanelD(e.target.value)} className="h-11 rounded-xl" />
-                    </div>
-                    <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">T. Int Deseada (°C)</Label>
                       <Input type="number" value={tInt} onChange={(e) => setTInt(e.target.value)} className="h-11 rounded-xl" />
                     </div>
@@ -311,7 +333,7 @@ export default function CalculatorForm() {
                 ) : activeTab === "estrella" ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase font-bold text-muted-foreground">Potencia (W)</Label>
+                      <Label className="text-xs uppercase font-bold text-muted-foreground">Potencia Motor (W)</Label>
                       <Input type="number" value={p} onChange={(e) => setP(e.target.value)} className="h-11 rounded-xl" />
                     </div>
                     <div className="space-y-2">
@@ -319,7 +341,7 @@ export default function CalculatorForm() {
                       <Input type="number" value={v} onChange={(e) => setV(e.target.value)} className="h-11 rounded-xl" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase font-bold text-muted-foreground">cos φ (Nominal)</Label>
+                      <Label className="text-xs uppercase font-bold text-muted-foreground">cos φ (Placa)</Label>
                       <Input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} className="h-11 rounded-xl" />
                     </div>
                     <div className="space-y-2">
@@ -396,27 +418,34 @@ export default function CalculatorForm() {
                     <Info className="h-16 w-16 mx-auto mb-6 text-primary/20" />
                     <p className="text-sm font-medium px-4">Complete los parámetros técnicos para generar el informe basado en normativa IEC.</p>
                   </div>
-                ) : activeTab === "transmision" && typeof result === 'object' && 'resultSpeed' in result ? (
+                ) : activeTab === "transmision" && typeof result === 'object' && 'resultValue' in result ? (
                   <div className="w-full space-y-6 relative z-10">
                     <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-1.5">
-                      <Settings2 className="h-4 w-4" /> {transMode === 'FORWARD' ? 'VELOCIDAD FINAL CALCULADA' : 'VELOCIDAD REQUERIDA MOTOR'}
+                      <Settings2 className="h-4 w-4" /> 
+                      {transMode === 'FORWARD' 
+                        ? (result.isLinear ? 'VELOCIDAD LINEAL CALCULADA' : 'VELOCIDAD FINAL CALCULADA')
+                        : 'VELOCIDAD REQUERIDA MOTOR'}
                     </p>
                     <div className="space-y-1">
                       <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums">
-                        {result.resultSpeed?.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                        {result.resultValue?.toLocaleString(undefined, { maximumFractionDigits: 1 })}
                       </h3>
-                      <span className="text-xl md:text-2xl font-bold text-primary/60">RPM</span>
+                      <span className="text-xl md:text-2xl font-bold text-primary/60">
+                        {transMode === 'FORWARD' && result.isLinear ? 'mm/s' : 'RPM'}
+                      </span>
                     </div>
                     <div className="grid grid-cols-1 gap-4 mt-8">
                       <div className="bg-white p-5 rounded-2xl border shadow-sm">
-                        <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-2">Relación de Transmisión Total (I)</span>
+                        <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-2">Relación de Transmisión (I)</span>
                         <span className="text-3xl font-black text-accent">1 : {result.totalRatio?.toFixed(2)}</span>
-                        <p className="text-[10px] text-muted-foreground mt-2 font-medium">Factor de desmultiplicación acumulado</p>
+                        <p className="text-[10px] text-muted-foreground mt-2 font-medium">Factor de desmultiplicación mecánica</p>
                       </div>
-                      <div className="bg-white/50 p-3 rounded-xl border border-dashed text-[11px] flex justify-between items-center px-4">
-                        <span className="text-muted-foreground font-medium">Etapas procesadas:</span>
-                        <span className="font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{result.stagesCount}</span>
-                      </div>
+                      {result.isLinear && (
+                        <div className="bg-primary/5 p-3 rounded-xl border border-dashed text-[11px] flex justify-between items-center px-4">
+                          <span className="text-muted-foreground font-medium">Paso configurado:</span>
+                          <span className="font-bold text-primary">{linearLead} mm/rev</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : activeTab === "climatizacion" && typeof result === 'object' && 'coolingPower' in result ? (
@@ -481,18 +510,6 @@ export default function CalculatorForm() {
                           </div>
                         </div>
                       </div>
-
-                      <div className="bg-primary/5 p-4 rounded-xl border text-[11px] text-left space-y-2">
-                        <h4 className="font-bold text-primary uppercase text-[9px] tracking-widest">Aparamenta (IEC 60947)</h4>
-                        <div className="flex justify-between font-medium">
-                          <span className="text-muted-foreground">KM1 / KM2 (Linea/Δ):</span>
-                          <span className="text-primary font-black">{result.contactorDelta?.toFixed(1)} A</span>
-                        </div>
-                        <div className="flex justify-between font-medium pt-1 border-t border-primary/10">
-                          <span className="text-muted-foreground">KM3 (Estrella Y):</span>
-                          <span className="text-primary font-black">{result.contactorStar?.toFixed(1)} A</span>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 ) : (
@@ -516,17 +533,17 @@ export default function CalculatorForm() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-2">
         <Card className="p-5 bg-white/40 backdrop-blur-sm border-dashed rounded-2xl flex gap-4 hover:bg-white/60 transition-colors">
-          <ArrowRightLeft className="h-8 w-8 text-primary shrink-0 p-1.5 bg-primary/10 rounded-xl" />
+          <MoveHorizontal className="h-8 w-8 text-primary shrink-0 p-1.5 bg-primary/10 rounded-xl" />
           <div className="text-sm space-y-1">
-            <h5 className="font-bold text-primary">Ingeniería Electromecánica</h5>
-            <p className="text-muted-foreground text-xs leading-relaxed">Cálculo de velocidades y relaciones de transmisión para optimizar el rendimiento del tren de potencia.</p>
+            <h5 className="font-bold text-primary">Cinemática Lineal</h5>
+            <p className="text-muted-foreground text-xs leading-relaxed">Dimensionamiento de husillos y correas dentadas para servomotores con alta precisión milimétrica.</p>
           </div>
         </Card>
         <Card className="p-5 bg-white/40 backdrop-blur-sm border-dashed rounded-2xl flex gap-4 hover:bg-white/60 transition-colors">
           <ShieldCheck className="h-8 w-8 text-accent shrink-0 p-1.5 bg-accent/10 rounded-xl" />
           <div className="text-sm space-y-1">
             <h5 className="font-bold text-primary">Trazabilidad Normativa</h5>
-            <p className="text-muted-foreground text-xs leading-relaxed">Todos los cálculos generan resultados auditables bajo estándares internacionales de ingeniería industrial.</p>
+            <p className="text-muted-foreground text-xs leading-relaxed">Cálculos auditables bajo estándares ISO 13012 para componentes de movimiento lineal industrial.</p>
           </div>
         </Card>
       </div>
