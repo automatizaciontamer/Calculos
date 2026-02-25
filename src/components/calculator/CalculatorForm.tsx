@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -22,7 +23,7 @@ import {
   TransmissionStage,
   CONDUCTIVITY 
 } from "@/lib/electrical-formulas";
-import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake, Settings2, Plus, Trash2, ArrowRightLeft, MoveHorizontal } from "lucide-react";
+import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake, Settings2, Plus, Trash2, ArrowRightLeft, MoveHorizontal, Cpu } from "lucide-react";
 
 export default function CalculatorForm() {
   const [activeTab, setActiveTab] = useState("potencia");
@@ -254,12 +255,12 @@ export default function CalculatorForm() {
                         <Label className="text-xs uppercase font-bold text-muted-foreground">
                           {transMode === 'FORWARD' ? 'Velocidad Motor (RPM)' : (transMotionType === 'LINEAR' ? 'Velocidad Final (mm/s)' : 'Velocidad Final (RPM)')}
                         </Label>
-                        <Input type="number" value={transSpeed} onChange={(e) => setTransSpeed(e.target.value)} className="h-11 rounded-xl" />
+                        <input type="number" value={transSpeed} onChange={(e) => setTransSpeed(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
                       </div>
                       {transMotionType === 'LINEAR' && (
                         <div className="space-y-2">
                           <Label className="text-xs uppercase font-bold text-muted-foreground">Paso / Avance (mm/rev)</Label>
-                          <Input type="number" value={linearLead} onChange={(e) => setLinearLead(e.target.value)} className="h-11 rounded-xl" placeholder="Ejem: 5mm (husillo)" />
+                          <input type="number" value={linearLead} onChange={(e) => setLinearLead(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Ejem: 5mm (husillo)" />
                         </div>
                       )}
                     </div>
@@ -276,20 +277,20 @@ export default function CalculatorForm() {
                           <div key={idx} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] items-end gap-3 p-4 bg-muted/20 rounded-2xl border border-primary/5">
                             <div className="space-y-1.5">
                               <Label className="text-[10px] uppercase font-bold text-muted-foreground">Entrada (Z1 / D1)</Label>
-                              <Input 
+                              <input 
                                 type="number" 
                                 value={stage.input} 
                                 onChange={(e) => handleUpdateStage(idx, 'input', e.target.value)} 
-                                className="h-10 rounded-lg bg-white"
+                                className="flex h-10 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                               />
                             </div>
                             <div className="space-y-1.5">
                               <Label className="text-[10px] uppercase font-bold text-muted-foreground">Salida (Z2 / D2)</Label>
-                              <Input 
+                              <input 
                                 type="number" 
                                 value={stage.output} 
                                 onChange={(e) => handleUpdateStage(idx, 'output', e.target.value)} 
-                                className="h-10 rounded-lg bg-white"
+                                className="flex h-10 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                               />
                             </div>
                             <Button 
@@ -334,75 +335,75 @@ export default function CalculatorForm() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Cant. VFDs</Label>
-                      <Input type="number" value={vfdCount} onChange={(e) => setVfdCount(e.target.value)} className="h-11 rounded-xl" />
+                      <input type="number" value={vfdCount} onChange={(e) => setVfdCount(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Potencia VFD (kW)</Label>
-                      <Input type="number" value={vfdPowerKw} onChange={(e) => setVfdPowerKw(e.target.value)} className="h-11 rounded-xl" />
+                      <input type="number" value={vfdPowerKw} onChange={(e) => setVfdPowerKw(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Ancho (mm)</Label>
-                      <Input type="number" value={panelW} onChange={(e) => setPanelW(e.target.value)} className="h-11 rounded-xl" />
+                      <input type="number" value={panelW} onChange={(e) => setPanelW(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Alto (mm)</Label>
-                      <Input type="number" value={panelH} onChange={(e) => setPanelH(e.target.value)} className="h-11 rounded-xl" />
+                      <input type="number" value={panelH} onChange={(e) => setPanelH(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">T. Int Deseada (°C)</Label>
-                      <Input type="number" value={tInt} onChange={(e) => setTInt(e.target.value)} className="h-11 rounded-xl" />
+                      <input type="number" value={tInt} onChange={(e) => setTInt(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">T. Ext Máx (°C)</Label>
-                      <Input type="number" value={tExt} onChange={(e) => setTExt(e.target.value)} className="h-11 rounded-xl" />
+                      <input type="number" value={tExt} onChange={(e) => setTExt(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                   </div>
                 ) : activeTab === "estrella" ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Potencia Motor (W)</Label>
-                      <Input type="number" value={p} onChange={(e) => setP(e.target.value)} className="h-11 rounded-xl" />
+                      <input type="number" value={p} onChange={(e) => setP(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Tensión (V)</Label>
-                      <Input type="number" value={v} onChange={(e) => setV(e.target.value)} className="h-11 rounded-xl" />
+                      <input type="number" value={v} onChange={(e) => setV(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">cos φ (Placa)</Label>
-                      <Input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} className="h-11 rounded-xl" />
+                      <input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Rendimiento η (%)</Label>
-                      <Input type="number" value={eff} onChange={(e) => setEff(e.target.value)} className="h-11 rounded-xl" />
+                      <input type="number" value={eff} onChange={(e) => setEff(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Tensión (V)</Label>
-                      <Input type="number" value={v} onChange={(e) => setV(e.target.value)} className="h-11 rounded-xl" />
+                      <input type="number" value={v} onChange={(e) => setV(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Corriente (A)</Label>
-                      <Input type="number" value={i} onChange={(e) => setI(e.target.value)} className="h-11 rounded-xl" />
+                      <input type="number" value={i} onChange={(e) => setI(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                     {activeTab === "corriente" && (
                       <div className="space-y-2">
                         <Label className="text-xs uppercase font-bold text-muted-foreground">Potencia (W)</Label>
-                        <Input type="number" value={p} onChange={(e) => setP(e.target.value)} className="h-11 rounded-xl" />
+                        <input type="number" value={p} onChange={(e) => setP(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                       </div>
                     )}
                     {system !== "DC" && (
                       <div className="space-y-2">
                         <Label className="text-xs uppercase font-bold text-muted-foreground">Factor de Potencia</Label>
-                        <Input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} className="h-11 rounded-xl" />
+                        <input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                       </div>
                     )}
                     {(activeTab === "seccion" || activeTab === "caida") && (
                       <>
                         <div className="space-y-2">
                           <Label className="text-xs uppercase font-bold text-muted-foreground">Longitud (m)</Label>
-                          <Input type="number" value={length} onChange={(e) => setLength(e.target.value)} className="h-11 rounded-xl" />
+                          <input type="number" value={length} onChange={(e) => setLength(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-xs uppercase font-bold text-muted-foreground">Conductor (IEC 60228)</Label>
@@ -417,12 +418,12 @@ export default function CalculatorForm() {
                         {activeTab === "caida" ? (
                           <div className="space-y-2">
                             <Label className="text-xs uppercase font-bold text-muted-foreground">Sección (mm²)</Label>
-                            <Input type="number" value={section} onChange={(e) => setSection(e.target.value)} className="h-11 rounded-xl" />
+                            <input type="number" value={section} onChange={(e) => setSection(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                           </div>
                         ) : (
                           <div className="space-y-2">
                             <Label className="text-xs uppercase font-bold text-muted-foreground">ΔV Admisible (V)</Label>
-                            <Input type="number" value={maxVd} onChange={(e) => setMaxVd(e.target.value)} className="h-11 rounded-xl" />
+                            <input type="number" value={maxVd} onChange={(e) => setMaxVd(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                           </div>
                         )}
                       </>
@@ -541,41 +542,69 @@ export default function CalculatorForm() {
                     </div>
                   </div>
                 ) : activeTab === "estrella" && typeof result === 'object' && 'relaySetting' in result ? (
-                  <div className="w-full space-y-6 relative z-10">
-                    <div>
-                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5">CORRIENTE NOMINAL (In)</p>
-                      <h3 className="text-4xl md:text-5xl font-black text-primary tabular-nums">
-                        {result.nominalCurrent?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                        <span className="text-xl ml-2 text-primary/60">A</span>
-                      </h3>
-                    </div>
-                    
-                    <div className="p-6 bg-white rounded-2xl border-2 border-accent/20 shadow-lg scale-105">
-                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5">AJUSTE RELÉ TÉRMICO (Ir)</p>
-                      <h3 className="text-5xl md:text-6xl font-black text-accent tabular-nums">
+                  <div className="w-full space-y-4 relative z-10 text-left overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">
+                    <div className="bg-white p-4 rounded-2xl border-2 border-accent/20 shadow-md">
+                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Ajuste Relé Térmico (Ir)</p>
+                      <h3 className="text-4xl font-black text-accent tabular-nums flex items-baseline gap-2">
                         {result.relaySetting?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                        <span className="text-2xl ml-2">A</span>
+                        <span className="text-lg font-bold">A</span>
                       </h3>
-                      <p className="text-[10px] text-muted-foreground mt-2 font-bold uppercase tracking-tight">PROTECCIÓN BASADA EN CORRIENTE DE FASE</p>
+                      <p className="text-[9px] text-muted-foreground font-medium uppercase mt-1 tracking-tight">PROTECCIÓN BASADA EN CORRIENTE DE FASE (In/√3)</p>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 mt-4">
-                      <div className="bg-white p-4 rounded-2xl border shadow-sm space-y-3">
+                    <div className="grid grid-cols-1 gap-3 mt-4">
+                      <div className="bg-white p-4 rounded-2xl border shadow-sm space-y-4">
                         <h4 className="text-[10px] font-bold text-muted-foreground uppercase border-b pb-2 flex items-center justify-between tracking-wider">
-                          <span>CONDUCTORES (IEC 60364)</span>
-                          <Ruler className="h-4 w-4 text-primary" />
+                          <span>Contactores (IEC 60947-4-1)</span>
+                          <Cpu className="h-4 w-4 text-primary" />
                         </h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="text-left border-r pr-2">
-                            <span className="block text-[9px] text-muted-foreground uppercase font-bold mb-1">Red (In)</span>
-                            <span className="text-lg font-black text-primary">{result.sectionMain} mm²</span>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="p-2 bg-primary/5 rounded-lg border text-center">
+                            <span className="block text-[8px] font-bold text-muted-foreground">KM1 (LÍNEA)</span>
+                            <span className="text-sm font-black text-primary">{result.contactorMain?.toFixed(1)}A</span>
                           </div>
-                          <div className="text-right pl-2">
-                            <span className="block text-[9px] text-muted-foreground uppercase font-bold mb-1">Motor (6h)</span>
-                            <span className="text-lg font-black text-accent">{result.sectionMotor} mm²</span>
+                          <div className="p-2 bg-primary/5 rounded-lg border text-center">
+                            <span className="block text-[8px] font-bold text-muted-foreground">KM2 (Δ)</span>
+                            <span className="text-sm font-black text-primary">{result.contactorDelta?.toFixed(1)}A</span>
+                          </div>
+                          <div className="p-2 bg-primary/5 rounded-lg border text-center">
+                            <span className="block text-[8px] font-bold text-muted-foreground">KM3 (Y)</span>
+                            <span className="text-sm font-black text-accent">{result.contactorStar?.toFixed(1)}A</span>
                           </div>
                         </div>
                       </div>
+
+                      <div className="bg-white p-4 rounded-2xl border shadow-sm space-y-4">
+                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase border-b pb-2 flex items-center justify-between tracking-wider">
+                          <span>Conductores (IEC 60364)</span>
+                          <Ruler className="h-4 w-4 text-primary" />
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center p-2 bg-muted/20 rounded-lg">
+                            <div className="text-left">
+                              <span className="block text-[9px] font-bold text-muted-foreground">LÍNEA ALIMENTACIÓN (3P+PE)</span>
+                              <span className="text-sm font-black text-primary">Sección: {result.sectionMain} mm²</span>
+                            </div>
+                            <Box className="h-5 w-5 text-primary/30" />
+                          </div>
+                          <div className="flex justify-between items-center p-2 bg-accent/5 rounded-lg border-accent/20 border">
+                            <div className="text-left">
+                              <span className="block text-[9px] font-bold text-muted-foreground">CONEXIÓN MOTOR (6 HILOS)</span>
+                              <span className="text-sm font-black text-accent">Sección: {result.sectionMotor} mm²</span>
+                            </div>
+                            <ArrowRightLeft className="h-5 w-5 text-accent/30" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-primary/5 rounded-xl border border-dashed text-[10px] leading-tight text-muted-foreground">
+                      <p className="font-bold text-primary mb-1">CÁLCULO DE CORRIENTES:</p>
+                      <ul className="space-y-1">
+                        <li>• In: {result.nominalCurrent?.toFixed(2)}A</li>
+                        <li>• Corriente de Fase (Ir): {result.relaySetting?.toFixed(2)}A</li>
+                        <li>• Reducción en Estrella (In/3): {result.contactorStar?.toFixed(2)}A</li>
+                      </ul>
                     </div>
                   </div>
                 ) : (
