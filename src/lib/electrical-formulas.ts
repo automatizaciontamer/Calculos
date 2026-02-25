@@ -47,7 +47,6 @@ const IEC_AMPACITY_TABLE = [
 ];
 
 const getIECSection = (current: number): number => {
-  // Aplicamos factor de seguridad según IEC 60364 para cargas de motor (habitualmente 1.25 * In)
   const safetyFactor = 1.25;
   const targetCurrent = current * safetyFactor;
   const match = IEC_AMPACITY_TABLE.find(entry => entry.current >= targetCurrent);
@@ -95,9 +94,6 @@ export const calculateCurrent = (
   }
 };
 
-/**
- * Cálculo de Caída de Tensión basado en IEC 60364-5-52.
- */
 export const calculateVoltageDrop = (
   current: number,
   length: number,
@@ -122,9 +118,6 @@ export const calculateVoltageDrop = (
   }
 };
 
-/**
- * Cálculo de Sección de Conductor basado en IEC 60364-5-52 por caída de tensión admisible.
- */
 export const calculateCableSection = (
   current: number,
   length: number,
@@ -149,14 +142,11 @@ export const calculateCableSection = (
   }
 };
 
-/**
- * IEC 60890: Cálculo de la potencia de refrigeración necesaria para envolventes.
- */
 export const calculatePanelCooling = (
-  width: number, // mm
-  height: number, // mm
-  depth: number, // mm
-  otherPowerLoss: number, // W
+  width: number,
+  height: number,
+  depth: number,
+  otherPowerLoss: number,
   vfdCount: number,
   vfdPowerKw: number,
   tInternal: number,
@@ -168,7 +158,6 @@ export const calculatePanelCooling = (
   const h = height / 1000;
   const d = depth / 1000;
 
-  // Cálculo de superficie efectiva de intercambio A según tipo de montaje (IEC 60890)
   let A = 0;
   switch (installation) {
     case 'FREE': 
@@ -185,13 +174,11 @@ export const calculatePanelCooling = (
       break;
   }
   
-  // Estimación de pérdidas térmicas VFD (típico 3% según guías técnicas de fabricantes bajo IEC)
   const vfdLosses = vfdCount * (vfdPowerKw * 1000) * 0.03;
   const totalPowerLoss = otherPowerLoss + vfdLosses;
   const deltaT = tInternal - tExternal;
   const k = MATERIAL_K[materialKey];
   
-  // Potencia frigorífica requerida P_req = P_v - k * A * deltaT
   const coolingPower = totalPowerLoss - (k * A * deltaT);
   
   return {
@@ -203,10 +190,6 @@ export const calculatePanelCooling = (
   };
 };
 
-/**
- * IEC 60947-4-1: Aparellaje de baja tensión - Contactores y arrancadores de motor.
- * Dimensionamiento para arranque Estrella-Triángulo.
- */
 export const calculateStarDelta = (
   power: number,
   voltage: number,
@@ -215,14 +198,8 @@ export const calculateStarDelta = (
 ) => {
   const denominator = Math.sqrt(3) * voltage * pf * (efficiency / 100);
   const nominalCurrent = denominator > 0 ? power / denominator : 0;
-  
-  // IEC 60947-4-1 define que para Y-Δ:
-  // Corriente de fase (en los devanados del motor y relé térmico): In / sqrt(3)
   const iPhase = nominalCurrent / Math.sqrt(3);
-  // Corriente en el contactor de Estrella: In / 3
   const iStar = nominalCurrent / 3;
-
-  // Dimensionamiento de conductores IEC 60364-5-52 y IEC 60228
   const sectionMain = getIECSection(nominalCurrent);
   const sectionMotor = getIECSection(iPhase);
   
@@ -234,5 +211,43 @@ export const calculateStarDelta = (
     contactorStar: iStar,
     sectionMain,
     sectionMotor
+  };
+};
+
+/**
+ * Cálculo de transmisión mecánica.
+ * Relación i = d2 / d1 = z2 / z1 = n1 / n2
+ */
+export interface TransmissionStage {
+  input: number; // Dientes o diámetro entrada
+  output: number; // Dientes o diámetro salida
+}
+
+export const calculateTransmission = (
+  speed: number,
+  stages: TransmissionStage[],
+  mode: 'FORWARD' | 'REVERSE'
+) => {
+  // Relación total I = i1 * i2 * ... * in
+  let totalRatio = 1;
+  stages.forEach(stage => {
+    if (stage.input > 0 && stage.output > 0) {
+      totalRatio *= (stage.output / stage.input);
+    }
+  });
+
+  let resultSpeed = 0;
+  if (mode === 'FORWARD') {
+    // Dada n_motor, calcular n_final: n2 = n1 / totalRatio
+    resultSpeed = totalRatio > 0 ? speed / totalRatio : 0;
+  } else {
+    // Dada n_final, calcular n_motor: n1 = n2 * totalRatio
+    resultSpeed = speed * totalRatio;
+  }
+
+  return {
+    resultSpeed,
+    totalRatio,
+    stagesCount: stages.length
   };
 };

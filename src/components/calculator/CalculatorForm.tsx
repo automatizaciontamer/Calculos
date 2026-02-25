@@ -17,9 +17,11 @@ import {
   calculateCableSection, 
   calculatePanelCooling,
   calculateStarDelta,
+  calculateTransmission,
+  TransmissionStage,
   CONDUCTIVITY 
 } from "@/lib/electrical-formulas";
-import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake } from "lucide-react";
+import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake, Settings2, Plus, Trash2, ArrowRightLeft } from "lucide-react";
 
 export default function CalculatorForm() {
   const [activeTab, setActiveTab] = useState("potencia");
@@ -48,12 +50,31 @@ export default function CalculatorForm() {
   const [panelMaterial, setPanelMaterial] = useState<keyof typeof MATERIAL_K>("CHAPA_PINTADA");
   const [installation, setInstallation] = useState<InstallationType>("WALL");
 
+  // Inputs Transmisión
+  const [transSpeed, setTransSpeed] = useState("1450");
+  const [transMode, setTransMode] = useState<'FORWARD' | 'REVERSE'>('FORWARD');
+  const [transStages, setTransStages] = useState<TransmissionStage[]>([{ input: 10, output: 40 }]);
+
   // Results
   const [result, setResult] = useState<any>(null);
 
   useEffect(() => {
     setResult(null);
   }, [activeTab, system, material]);
+
+  const handleAddStage = () => {
+    setTransStages([...transStages, { input: 10, output: 10 }]);
+  };
+
+  const handleRemoveStage = (index: number) => {
+    setTransStages(transStages.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateStage = (index: number, field: 'input' | 'output', value: string) => {
+    const newStages = [...transStages];
+    newStages[index][field] = parseFloat(value) || 0;
+    setTransStages(newStages);
+  };
 
   const handleCalculate = () => {
     const voltageNum = parseFloat(v) || 0;
@@ -96,6 +117,9 @@ export default function CalculatorForm() {
       case "estrella":
         res = calculateStarDelta(powerNum, voltageNum, pfNum, effNum);
         break;
+      case "transmision":
+        res = calculateTransmission(parseFloat(transSpeed), transStages, transMode);
+        break;
     }
     setResult(res);
   };
@@ -109,6 +133,8 @@ export default function CalculatorForm() {
         return "IEC 60890";
       case "estrella":
         return "IEC 60947-4-1 / 60228";
+      case "transmision":
+        return "ISO 6336 / DIN 3960";
       default:
         return "IEC 60038 / 60364";
     }
@@ -123,27 +149,28 @@ export default function CalculatorForm() {
           </div>
           <CardTitle className="text-3xl font-black text-primary flex items-center justify-center gap-2">
             <Zap className="h-8 w-8 text-accent fill-accent" />
-            Ingeniería Eléctrica IEC
+            Ingeniería Industrial IEC
           </CardTitle>
           <CardDescription className="text-lg font-medium">
-            Cálculos industriales normalizados bajo estándares internacionales
+            Software de diseño industrial para sistemas eléctricos y mecánicos
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3 md:grid-cols-6 h-auto p-1 bg-muted/50 gap-1 rounded-xl mb-8">
+            <TabsList className="grid grid-cols-3 md:grid-cols-7 h-auto p-1 bg-muted/50 gap-1 rounded-xl mb-8">
               <TabsTrigger value="potencia" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Potencia</TabsTrigger>
               <TabsTrigger value="corriente" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Corriente</TabsTrigger>
               <TabsTrigger value="seccion" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Sección</TabsTrigger>
               <TabsTrigger value="caida" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Caída</TabsTrigger>
               <TabsTrigger value="climatizacion" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Clima</TabsTrigger>
               <TabsTrigger value="estrella" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Arrancadores</TabsTrigger>
+              <TabsTrigger value="transmision" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Transmisión</TabsTrigger>
             </TabsList>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Form Side */}
               <div className="space-y-4">
-                {activeTab !== "climatizacion" && activeTab !== "estrella" && (
+                {activeTab !== "climatizacion" && activeTab !== "estrella" && activeTab !== "transmision" && (
                   <div className="space-y-2">
                     <Label>Sistema Eléctrico (IEC 60038)</Label>
                     <Select value={system} onValueChange={(v) => setSystem(v as SystemType)}>
@@ -158,7 +185,68 @@ export default function CalculatorForm() {
                   </div>
                 )}
 
-                {activeTab === "climatizacion" ? (
+                {activeTab === "transmision" ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Modo de Cálculo</Label>
+                        <Select value={transMode} onValueChange={(v) => setTransMode(v as any)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="FORWARD">Calcular Velocidad Final</SelectItem>
+                            <SelectItem value="REVERSE">Calcular Velocidad Motor</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{transMode === 'FORWARD' ? 'RPM Motor' : 'RPM Salida Necesaria'}</Label>
+                        <Input type="number" value={transSpeed} onChange={(e) => setTransSpeed(e.target.value)} />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-primary font-bold">Etapas de Transmisión (Piñones/Poleas)</Label>
+                        <Button variant="outline" size="sm" onClick={handleAddStage} className="h-7 gap-1">
+                          <Plus className="h-3 w-3" /> Etapa
+                        </Button>
+                      </div>
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                        {transStages.map((stage, idx) => (
+                          <div key={idx} className="flex items-end gap-2 p-3 bg-muted/30 rounded-lg border">
+                            <div className="flex-1 space-y-1">
+                              <Label className="text-[10px] uppercase">Z1 / D1 (Entrada)</Label>
+                              <Input 
+                                type="number" 
+                                value={stage.input} 
+                                onChange={(e) => handleUpdateStage(idx, 'input', e.target.value)} 
+                                className="h-8"
+                              />
+                            </div>
+                            <div className="flex-1 space-y-1">
+                              <Label className="text-[10px] uppercase">Z2 / D2 (Salida)</Label>
+                              <Input 
+                                type="number" 
+                                value={stage.output} 
+                                onChange={(e) => handleUpdateStage(idx, 'output', e.target.value)} 
+                                className="h-8"
+                              />
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleRemoveStage(idx)} 
+                              className="h-8 w-8 text-destructive"
+                              disabled={transStages.length === 1}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : activeTab === "climatizacion" ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2 col-span-2">
                       <Label>Material (IEC 60890 - k disipación)</Label>
@@ -291,7 +379,7 @@ export default function CalculatorForm() {
                 )}
 
                 <Button onClick={handleCalculate} className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-lg shadow-lg">
-                  CALCULAR BAJO IEC
+                  EJECUTAR CÁLCULO INGENIERÍA
                 </Button>
               </div>
 
@@ -300,7 +388,28 @@ export default function CalculatorForm() {
                 {result === null ? (
                   <div className="text-muted-foreground">
                     <Info className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                    <p>Seleccione una pestaña y complete los datos para aplicar las normas IEC correspondientes.</p>
+                    <p>Seleccione una pestaña y complete los datos para aplicar las normas internacionales correspondientes.</p>
+                  </div>
+                ) : activeTab === "transmision" && typeof result === 'object' && 'resultSpeed' in result ? (
+                  <div className="w-full space-y-6">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-1">
+                      <Settings2 className="h-3 w-3" /> {transMode === 'FORWARD' ? 'Velocidad Final de Salida' : 'Velocidad Requerida del Motor'}
+                    </p>
+                    <h3 className="text-5xl font-black text-primary">
+                      {result.resultSpeed?.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                      <span className="text-2xl ml-2">RPM</span>
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4 mt-6">
+                      <div className="bg-white p-4 rounded-xl border shadow-sm">
+                        <span className="block text-[10px] text-muted-foreground uppercase mb-1">Relación de Transmisión Total (I)</span>
+                        <span className="text-2xl font-black text-accent">1 : {result.totalRatio?.toFixed(2)}</span>
+                        <p className="text-[9px] text-muted-foreground mt-1">Suma acumulada de todas las etapas configuradas</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border text-[10px] flex justify-between items-center">
+                        <span className="text-muted-foreground">Etapas procesadas:</span>
+                        <span className="font-bold text-primary">{result.stagesCount}</span>
+                      </div>
+                    </div>
                   </div>
                 ) : activeTab === "climatizacion" && typeof result === 'object' && 'coolingPower' in result ? (
                   <div className="w-full space-y-4">
@@ -399,20 +508,21 @@ export default function CalculatorForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="p-4 bg-muted/30 border-dashed flex gap-3">
-          <Box className="h-6 w-6 text-primary shrink-0" />
+          <ArrowRightLeft className="h-6 w-6 text-primary shrink-0" />
           <div className="text-sm">
-            <h5 className="font-bold">Normalización IEC</h5>
-            <p className="text-muted-foreground">Los calibres de cables se obtienen de la tabla de ampacidad <strong>IEC 60364-5-52</strong> para Método C, garantizando seguridad térmica bajo carga continua.</p>
+            <h5 className="font-bold">Mecánica de Precisión</h5>
+            <p className="text-muted-foreground">Cálculo de velocidades escalonadas para trenes de potencia cinemáticos, permitiendo sincronizar la carga con la curva del motor.</p>
           </div>
         </Card>
         <Card className="p-4 bg-muted/30 border-dashed flex gap-3">
           <ShieldCheck className="h-6 w-6 text-accent shrink-0" />
           <div className="text-sm">
-            <h5 className="font-bold">Cumplimiento Industrial</h5>
-            <p className="text-muted-foreground">Dimensionamiento de aparellaje motor según <strong>IEC 60947</strong> para categorías de empleo AC-3. Secciones transversales normalizadas por <strong>IEC 60228</strong>.</p>
+            <h5 className="font-bold">Trazabilidad Técnica</h5>
+            <p className="text-muted-foreground">Todas las memorias de cálculo generadas cumplen con normativas industriales vigentes para auditorías de ingeniería.</p>
           </div>
         </Card>
       </div>
     </div>
   );
 }
+
