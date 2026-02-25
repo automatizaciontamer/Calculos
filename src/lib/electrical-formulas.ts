@@ -17,11 +17,8 @@ export const calculatePower = (
     case 'MONO':
       return voltage * current * powerFactor;
     case 'BI':
-      // Common bifasica formula (2 phases + neutral): V_line_to_neutral * 2 * current * PF
-      // Or V_line_to_line * current * PF. We use V * I * PF * 2 assuming V is phase-neutral.
       return 2 * voltage * current * powerFactor;
     case 'TRI':
-      // V is line-to-line voltage
       return Math.sqrt(3) * voltage * current * powerFactor;
     default:
       return 0;
@@ -63,10 +60,8 @@ export const calculateVoltageDrop = (
   switch (system) {
     case 'DC':
     case 'MONO':
-      // 2 wires for DC and Monofasica
       return (2 * length * current * powerFactor) / (k * section);
     case 'BI':
-      // Assuming balanced system, voltage drop is similar to mono but with PF
       return (2 * length * current * powerFactor) / (k * section);
     case 'TRI':
       return (Math.sqrt(3) * length * current * powerFactor) / (k * section);
@@ -97,4 +92,53 @@ export const calculateCableSection = (
     default:
       return 0;
   }
+};
+
+/**
+ * Calcula la potencia de refrigeración necesaria para un tablero eléctrico.
+ * Q = Pv - k * A * ΔT
+ */
+export const calculatePanelCooling = (
+  width: number, // mm
+  height: number, // mm
+  depth: number, // mm
+  powerLoss: number, // W (calor disipado por componentes)
+  tInternal: number, // °C
+  tExternal: number, // °C
+  materialK: number = 5.5 // W/m²K (5.5 para chapa de acero pintada)
+) => {
+  // Convertir a metros
+  const w = width / 1000;
+  const h = height / 1000;
+  const d = depth / 1000;
+
+  // Área de superficie efectiva (Tablero exento)
+  const A = 1.8 * h * (w + d) + 1.4 * w * d;
+  
+  // Diferencia de temperatura
+  const deltaT = tInternal - tExternal;
+  
+  // Potencia de refrigeración requerida
+  const coolingPower = powerLoss - (materialK * A * deltaT);
+  
+  return {
+    coolingPower: Math.max(0, coolingPower),
+    surfaceArea: A,
+    deltaT: deltaT
+  };
+};
+
+/**
+ * Calcula parámetros para arranque Estrella-Triángulo
+ */
+export const calculateStarDelta = (nominalCurrent: number) => {
+  const iPhase = nominalCurrent / Math.sqrt(3); // Corriente por fase (ajuste relé térmico)
+  const iStar = nominalCurrent / 3; // Corriente en estrella
+  
+  return {
+    relaySetting: iPhase,
+    contactorMain: iPhase,
+    contactorDelta: iPhase,
+    contactorStar: iStar
+  };
 };
