@@ -31,8 +31,6 @@ export const COMMERCIAL_SECTIONS = [
 
 /**
  * IEC 60364-5-52: Selección y montaje de equipos eléctricos - Canalizaciones.
- * Tabla de ampacidad simplificada para Método de Instalación C (Cables sobre pared).
- * Aislamiento PVC 70°C, Temp. ambiente 30°C.
  */
 const IEC_AMPACITY_TABLE = [
   { section: 1.5, current: 14.5 },
@@ -265,12 +263,9 @@ export const calculateStarDelta = (
   };
 };
 
-/**
- * Cálculo de transmisión mecánica.
- */
 export interface TransmissionStage {
-  input: number; // Dientes o diámetro entrada
-  output: number; // Dientes o diámetro salida
+  input: number;
+  output: number;
 }
 
 export const calculateTransmission = (
@@ -278,7 +273,7 @@ export const calculateTransmission = (
   stages: TransmissionStage[],
   mode: 'FORWARD' | 'REVERSE',
   isLinear: boolean = false,
-  lead: number = 5 // Paso en mm/rev (Lead)
+  lead: number = 5
 ) => {
   let totalRatio = 1;
   stages.forEach(stage => {
@@ -311,4 +306,36 @@ export const calculateTransmission = (
     stagesCount: stages.length,
     isLinear
   };
+};
+
+/**
+ * Código de colores para resistencias.
+ */
+export const RESISTOR_COLORS = [
+  { color: 'black', label: 'Negro', value: 0, multiplier: 1, tolerance: null, hex: '#000000' },
+  { color: 'brown', label: 'Marrón', value: 1, multiplier: 10, tolerance: 1, hex: '#8B4513' },
+  { color: 'red', label: 'Rojo', value: 2, multiplier: 100, tolerance: 2, hex: '#FF0000' },
+  { color: 'orange', label: 'Naranja', value: 3, multiplier: 1000, tolerance: null, hex: '#FFA500' },
+  { color: 'yellow', label: 'Amarillo', value: 4, multiplier: 10000, tolerance: null, hex: '#FFFF00' },
+  { color: 'green', label: 'Verde', value: 5, multiplier: 100000, tolerance: 0.5, hex: '#008000' },
+  { color: 'blue', label: 'Azul', value: 6, multiplier: 1000000, tolerance: 0.25, hex: '#0000FF' },
+  { color: 'violet', label: 'Violeta', value: 7, multiplier: 10000000, tolerance: 0.1, hex: '#EE82EE' },
+  { color: 'grey', label: 'Gris', value: 8, multiplier: null, tolerance: 0.05, hex: '#808080' },
+  { color: 'white', label: 'Blanco', value: 9, multiplier: null, tolerance: null, hex: '#FFFFFF' },
+  { color: 'gold', label: 'Oro', value: null, multiplier: 0.1, tolerance: 5, hex: '#FFD700' },
+  { color: 'silver', label: 'Plata', value: null, multiplier: 0.01, tolerance: 10, hex: '#C0C0C0' },
+];
+
+export const calculateResistor = (bands: string[]) => {
+  const colors = bands.map(b => RESISTOR_COLORS.find(c => c.color === b)!);
+  
+  if (bands.length === 4) {
+    const value = (colors[0].value! * 10 + colors[1].value!) * colors[2].multiplier!;
+    const tolerance = colors[3].tolerance;
+    return { value, tolerance };
+  } else {
+    const value = (colors[0].value! * 100 + colors[1].value! * 10 + colors[2].value!) * colors[3].multiplier!;
+    const tolerance = colors[4].tolerance;
+    return { value, tolerance };
+  }
 };
