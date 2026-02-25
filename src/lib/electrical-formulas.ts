@@ -5,6 +5,15 @@ export const CONDUCTIVITY = {
   ALUMINIO: 35,
 };
 
+export const MATERIAL_K = {
+  CHAPA_PINTADA: 5.5,
+  ACERO_INOX: 3.7,
+  ALUMINIO: 12.0,
+  PLASTICO: 3.5,
+};
+
+export type InstallationType = 'FREE' | 'WALL' | 'ROW' | 'RECESSED';
+
 export const calculatePower = (
   voltage: number,
   current: number,
@@ -96,44 +105,66 @@ export const calculateCableSection = (
 
 /**
  * Calcula la potencia de refrigeración necesaria para un tablero eléctrico.
- * Q = Pv - k * A * ΔT
  */
 export const calculatePanelCooling = (
   width: number, // mm
   height: number, // mm
   depth: number, // mm
-  powerLoss: number, // W (calor disipado por componentes)
-  tInternal: number, // °C
-  tExternal: number, // °C
-  materialK: number = 5.5 // W/m²K (5.5 para chapa de acero pintada)
+  otherPowerLoss: number, // W
+  vfdCount: number,
+  vfdPowerKw: number,
+  tInternal: number,
+  tExternal: number,
+  materialKey: keyof typeof MATERIAL_K,
+  installation: InstallationType
 ) => {
   // Convertir a metros
   const w = width / 1000;
   const h = height / 1000;
   const d = depth / 1000;
 
-  // Área de superficie efectiva (Tablero exento)
-  const A = 1.8 * h * (w + d) + 1.4 * w * d;
+  // Cálculo de Superficie Efectiva (A) según tipo de instalación
+  let A = 0;
+  switch (installation) {
+    case 'FREE': // Exento (Todas las caras libres)
+      A = 1.8 * h * (w + d) + 1.4 * w * d;
+      break;
+    case 'WALL': // Contra pared (Espalda cubierta)
+      A = 1.4 * w * h + 0.7 * w * d + 1.8 * d * h;
+      break;
+    case 'ROW': // En fila (Lados cubiertos)
+      A = 1.4 * w * h + 1.4 * w * d + 0.9 * d * h;
+      break;
+    case 'RECESSED': // Empotrado (Solo frontal libre)
+      A = 1.4 * w * h + 0.7 * w * d;
+      break;
+  }
+  
+  // Pérdidas por Variadores (aprox 3% de la potencia nominal)
+  const vfdLosses = vfdCount * (vfdPowerKw * 1000) * 0.03;
+  const totalPowerLoss = otherPowerLoss + vfdLosses;
   
   // Diferencia de temperatura
   const deltaT = tInternal - tExternal;
   
-  // Potencia de refrigeración requerida
-  const coolingPower = powerLoss - (materialK * A * deltaT);
+  // Coeficiente del material
+  const k = MATERIAL_K[materialKey];
+  
+  // Potencia de refrigeración requerida Q = Pv - k * A * ΔT
+  const coolingPower = totalPowerLoss - (k * A * deltaT);
   
   return {
     coolingPower: Math.max(0, coolingPower),
+    totalPowerLoss,
+    vfdLosses,
     surfaceArea: A,
     deltaT: deltaT
   };
 };
 
-/**
- * Calcula parámetros para arranque Estrella-Triángulo
- */
 export const calculateStarDelta = (nominalCurrent: number) => {
-  const iPhase = nominalCurrent / Math.sqrt(3); // Corriente por fase (ajuste relé térmico)
-  const iStar = nominalCurrent / 3; // Corriente en estrella
+  const iPhase = nominalCurrent / Math.sqrt(3);
+  const iStar = nominalCurrent / 3;
   
   return {
     relaySetting: iPhase,

@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   SystemType, 
+  InstallationType,
+  MATERIAL_K,
   calculatePower, 
   calculateCurrent, 
   calculateVoltageDrop, 
@@ -17,7 +19,7 @@ import {
   calculateStarDelta,
   CONDUCTIVITY 
 } from "@/lib/electrical-formulas";
-import { Zap, Activity, Ruler, ArrowDownToLine, RefreshCcw, Wind, Share2, Info } from "lucide-react";
+import { Zap, Activity, Ruler, ArrowDownToLine, Wind, Share2, Info, Box } from "lucide-react";
 
 export default function CalculatorForm() {
   const [activeTab, setActiveTab] = useState("potencia");
@@ -37,9 +39,13 @@ export default function CalculatorForm() {
   const [panelW, setPanelW] = useState("800");
   const [panelH, setPanelH] = useState("1200");
   const [panelD, setPanelD] = useState("400");
-  const [powerLoss, setPowerLoss] = useState("500");
+  const [otherPowerLoss, setOtherPowerLoss] = useState("100");
+  const [vfdCount, setVfdCount] = useState("1");
+  const [vfdPowerKw, setVfdPowerKw] = useState("7.5");
   const [tInt, setTInt] = useState("35");
   const [tExt, setTExt] = useState("45");
+  const [panelMaterial, setPanelMaterial] = useState<keyof typeof MATERIAL_K>("CHAPA_PINTADA");
+  const [installation, setInstallation] = useState<InstallationType>("WALL");
 
   // Results
   const [result, setResult] = useState<any>(null);
@@ -57,7 +63,7 @@ export default function CalculatorForm() {
     const sectionNum = parseFloat(section) || 0;
     const maxVdNum = parseFloat(maxVd) || 0;
 
-    let res: any = 0;
+    let res: any = null;
     switch (activeTab) {
       case "potencia":
         res = calculatePower(voltageNum, currentNum, system, system === 'DC' ? 1 : pfNum);
@@ -76,9 +82,13 @@ export default function CalculatorForm() {
           parseFloat(panelW),
           parseFloat(panelH),
           parseFloat(panelD),
-          parseFloat(powerLoss),
+          parseFloat(otherPowerLoss),
+          parseFloat(vfdCount),
+          parseFloat(vfdPowerKw),
           parseFloat(tInt),
-          parseFloat(tExt)
+          parseFloat(tExt),
+          panelMaterial,
+          installation
         );
         break;
       case "estrella":
@@ -97,78 +107,94 @@ export default function CalculatorForm() {
             Centro de Ingeniería Eléctrica
           </CardTitle>
           <CardDescription className="text-lg font-medium">
-            Herramientas avanzadas para proyectos industriales y residenciales
+            Herramientas de precisión para sistemas industriales
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid grid-cols-3 md:grid-cols-6 h-auto p-1 bg-muted/50 gap-1 rounded-xl mb-8">
-              <TabsTrigger value="potencia" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Zap className="h-4 w-4 mr-2 hidden md:block" /> Potencia
-              </TabsTrigger>
-              <TabsTrigger value="corriente" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Activity className="h-4 w-4 mr-2 hidden md:block" /> Corriente
-              </TabsTrigger>
-              <TabsTrigger value="seccion" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Ruler className="h-4 w-4 mr-2 hidden md:block" /> Sección
-              </TabsTrigger>
-              <TabsTrigger value="caida" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">
-                <ArrowDownToLine className="h-4 w-4 mr-2 hidden md:block" /> Caída
-              </TabsTrigger>
-              <TabsTrigger value="climatizacion" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Wind className="h-4 w-4 mr-2 hidden md:block" /> Aire Gabinete
-              </TabsTrigger>
-              <TabsTrigger value="estrella" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Share2 className="h-4 w-4 mr-2 hidden md:block" /> Y-Δ Motor
-              </TabsTrigger>
+              <TabsTrigger value="potencia" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Potencia</TabsTrigger>
+              <TabsTrigger value="corriente" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Corriente</TabsTrigger>
+              <TabsTrigger value="seccion" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Sección</TabsTrigger>
+              <TabsTrigger value="caida" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Caída</TabsTrigger>
+              <TabsTrigger value="climatizacion" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Clima</TabsTrigger>
+              <TabsTrigger value="estrella" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Y-Δ</TabsTrigger>
             </TabsList>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Form Side */}
               <div className="space-y-4">
                 {activeTab !== "climatizacion" && activeTab !== "estrella" && (
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <Label>Sistema Eléctrico</Label>
-                      <Select value={system} onValueChange={(v) => setSystem(v as SystemType)}>
-                        <SelectTrigger className="border-primary/20">
-                          <SelectValue placeholder="Seleccione sistema" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="DC">Corriente Continua (DC)</SelectItem>
-                          <SelectItem value="MONO">C.A. Monofásica (1F+N)</SelectItem>
-                          <SelectItem value="BI">C.A. Bifásica (2F)</SelectItem>
-                          <SelectItem value="TRI">C.A. Trifásica (3F)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div className="space-y-2">
+                    <Label>Sistema Eléctrico</Label>
+                    <Select value={system} onValueChange={(v) => setSystem(v as SystemType)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DC">DC</SelectItem>
+                        <SelectItem value="MONO">Monofásico</SelectItem>
+                        <SelectItem value="BI">Bifásico</SelectItem>
+                        <SelectItem value="TRI">Trifásico</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
 
                 {activeTab === "climatizacion" ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2 col-span-2">
+                      <Label>Material del Tablero</Label>
+                      <Select value={panelMaterial} onValueChange={(v) => setPanelMaterial(v as keyof typeof MATERIAL_K)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="CHAPA_PINTADA">Chapa de Acero Pintada</SelectItem>
+                          <SelectItem value="ACERO_INOX">Acero Inoxidable</SelectItem>
+                          <SelectItem value="ALUMINIO">Aluminio</SelectItem>
+                          <SelectItem value="PLASTICO">Poliéster / Plástico</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <Label>Tipo de Instalación</Label>
+                      <Select value={installation} onValueChange={(v) => setInstallation(v as InstallationType)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="FREE">Exento (Todas las caras libres)</SelectItem>
+                          <SelectItem value="WALL">Contra pared (Espalda cubierta)</SelectItem>
+                          <SelectItem value="ROW">En batería (Lados cubiertos)</SelectItem>
+                          <SelectItem value="RECESSED">Empotrado (Solo frontal libre)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="space-y-2">
-                      <Label>Ancho Gabinete (mm)</Label>
+                      <Label>Cant. Variadores</Label>
+                      <Input type="number" value={vfdCount} onChange={(e) => setVfdCount(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Potencia VFD (kW)</Label>
+                      <Input type="number" value={vfdPowerKw} onChange={(e) => setVfdPowerKw(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Ancho (mm)</Label>
                       <Input type="number" value={panelW} onChange={(e) => setPanelW(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label>Alto Gabinete (mm)</Label>
+                      <Label>Alto (mm)</Label>
                       <Input type="number" value={panelH} onChange={(e) => setPanelH(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Otras Pérdidas (W)</Label>
+                      <Input type="number" value={otherPowerLoss} onChange={(e) => setOtherPowerLoss(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label>Profundidad (mm)</Label>
                       <Input type="number" value={panelD} onChange={(e) => setPanelD(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label>Calor Disipado Pv (W)</Label>
-                      <Input type="number" value={powerLoss} onChange={(e) => setPowerLoss(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Temp. Interior Deseada (°C)</Label>
+                      <Label>T. Interior Deseada (°C)</Label>
                       <Input type="number" value={tInt} onChange={(e) => setTInt(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label>Temp. Exterior Máx (°C)</Label>
+                      <Label>T. Exterior Máx (°C)</Label>
                       <Input type="number" value={tExt} onChange={(e) => setTExt(e.target.value)} />
                     </div>
                   </div>
@@ -180,28 +206,22 @@ export default function CalculatorForm() {
                         <Input type="number" value={v} onChange={(e) => setV(e.target.value)} />
                       </div>
                     )}
-                    
-                    {(activeTab !== "corriente") && (
-                      <div className="space-y-2">
-                        <Label>Corriente {activeTab === "estrella" ? "Nominal" : ""}(A)</Label>
-                        <Input type="number" value={i} onChange={(e) => setI(e.target.value)} />
-                      </div>
-                    )}
-
+                    <div className="space-y-2">
+                      <Label>Corriente {activeTab === "estrella" ? "Nominal" : ""}(A)</Label>
+                      <Input type="number" value={i} onChange={(e) => setI(e.target.value)} />
+                    </div>
                     {activeTab === "corriente" && (
                       <div className="space-y-2">
                         <Label>Potencia (W)</Label>
                         <Input type="number" value={p} onChange={(e) => setP(e.target.value)} />
                       </div>
                     )}
-
                     {system !== "DC" && activeTab !== "estrella" && (
                       <div className="space-y-2">
-                        <Label>Factor de Potencia (cos φ)</Label>
+                        <Label>cos φ</Label>
                         <Input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} />
                       </div>
                     )}
-
                     {(activeTab === "seccion" || activeTab === "caida") && (
                       <>
                         <div className="space-y-2">
@@ -211,9 +231,7 @@ export default function CalculatorForm() {
                         <div className="space-y-2">
                           <Label>Material</Label>
                           <Select value={material} onValueChange={(v) => setMaterial(v as keyof typeof CONDUCTIVITY)}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="COBRE">Cobre</SelectItem>
                               <SelectItem value="ALUMINIO">Aluminio</SelectItem>
@@ -227,7 +245,7 @@ export default function CalculatorForm() {
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            <Label>ΔV Máx Permitida (V)</Label>
+                            <Label>ΔV Máx (V)</Label>
                             <Input type="number" value={maxVd} onChange={(e) => setMaxVd(e.target.value)} />
                           </div>
                         )}
@@ -236,86 +254,71 @@ export default function CalculatorForm() {
                   </div>
                 )}
 
-                <Button 
-                  onClick={handleCalculate} 
-                  className="w-full h-12 text-lg font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg transition-all mt-4"
-                >
+                <Button onClick={handleCalculate} className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-lg shadow-lg">
                   CALCULAR
                 </Button>
               </div>
 
               {/* Results Side */}
-              <div className="bg-primary/5 rounded-2xl p-6 border-2 border-primary/10 min-h-[300px] flex flex-col items-center justify-center text-center">
+              <div className="bg-primary/5 rounded-2xl p-6 border-2 border-primary/10 flex flex-col items-center justify-center text-center">
                 {result === null ? (
                   <div className="text-muted-foreground">
                     <Info className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                    <p>Complete los datos y presione calcular para ver los resultados técnicos.</p>
+                    <p>Ingrese los datos técnicos para obtener resultados.</p>
                   </div>
                 ) : activeTab === "climatizacion" && typeof result === 'object' && 'coolingPower' in result ? (
-                  <div className="w-full space-y-6">
-                    <div>
-                      <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Potencia Refrigeración Requerida</p>
-                      <h3 className="text-5xl font-black text-primary">
-                        {result.coolingPower?.toLocaleString(undefined, { maximumFractionDigits: 1 }) ?? '0'}
-                        <span className="text-2xl ml-2">W</span>
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm bg-white p-4 rounded-xl shadow-sm">
-                      <div className="text-left">
-                        <span className="text-muted-foreground block">Área Gabinete:</span>
-                        <span className="font-bold">{result.surfaceArea?.toFixed(2) ?? '0.00'} m²</span>
+                  <div className="w-full space-y-4">
+                    <p className="text-sm font-bold text-primary uppercase tracking-widest">Potencia Frigorífica Requerida</p>
+                    <h3 className="text-5xl font-black text-primary">
+                      {result.coolingPower?.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                      <span className="text-2xl ml-2">W</span>
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3 mt-4 text-xs text-left">
+                      <div className="bg-white p-2 rounded border">
+                        <span className="block text-muted-foreground">Pérdida VFD:</span>
+                        <span className="font-bold">{result.vfdLosses?.toFixed(1)} W</span>
                       </div>
-                      <div className="text-left">
-                        <span className="text-muted-foreground block">ΔT (Ti - Te):</span>
-                        <span className="font-bold">{result.deltaT ?? '0'} °C</span>
+                      <div className="bg-white p-2 rounded border">
+                        <span className="block text-muted-foreground">Pérdida Total (Pv):</span>
+                        <span className="font-bold">{result.totalPowerLoss?.toFixed(1)} W</span>
+                      </div>
+                      <div className="bg-white p-2 rounded border">
+                        <span className="block text-muted-foreground">Sup. Efectiva (A):</span>
+                        <span className="font-bold">{result.surfaceArea?.toFixed(2)} m²</span>
+                      </div>
+                      <div className="bg-white p-2 rounded border">
+                        <span className="block text-muted-foreground">ΔT (Ti - Te):</span>
+                        <span className="font-bold">{result.deltaT} °C</span>
                       </div>
                     </div>
-                    {result.coolingPower > 0 ? (
-                      <p className="text-xs text-destructive font-medium">Se requiere equipo de aire acondicionado o ventilación forzada.</p>
-                    ) : (
-                      <p className="text-xs text-green-600 font-medium">La disipación natural es suficiente para mantener la temperatura.</p>
-                    )}
                   </div>
                 ) : activeTab === "estrella" && typeof result === 'object' && 'relaySetting' in result ? (
-                  <div className="w-full space-y-6">
-                    <div>
-                      <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Ajuste Relé Térmico (Ir)</p>
-                      <h3 className="text-5xl font-black text-primary">
-                        {result.relaySetting?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? '0'}
-                        <span className="text-2xl ml-2">A</span>
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-1 gap-3 text-sm">
-                      <div className="flex justify-between p-3 bg-white rounded-lg shadow-sm">
-                        <span className="text-muted-foreground">Contactor Principal (KM1):</span>
-                        <span className="font-bold text-primary">{result.contactorMain?.toFixed(2) ?? '0.00'} A</span>
+                  <div className="w-full space-y-4">
+                    <p className="text-sm font-bold text-primary uppercase tracking-widest">Ajuste Relé Térmico</p>
+                    <h3 className="text-5xl font-black text-primary">
+                      {result.relaySetting?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      <span className="text-2xl ml-2">A</span>
+                    </h3>
+                    <div className="grid grid-cols-1 gap-2 mt-4 text-sm">
+                      <div className="flex justify-between p-2 bg-white rounded border">
+                        <span>Contactor Delta (KM2):</span>
+                        <span className="font-bold">{result.contactorDelta?.toFixed(1)} A</span>
                       </div>
-                      <div className="flex justify-between p-3 bg-white rounded-lg shadow-sm">
-                        <span className="text-muted-foreground">Contactor Triángulo (KM2):</span>
-                        <span className="font-bold text-primary">{result.contactorDelta?.toFixed(2) ?? '0.00'} A</span>
-                      </div>
-                      <div className="flex justify-between p-3 bg-white rounded-lg shadow-sm">
-                        <span className="text-muted-foreground">Contactor Estrella (KM3):</span>
-                        <span className="font-bold text-primary">{result.contactorStar?.toFixed(2) ?? '0.00'} A</span>
+                      <div className="flex justify-between p-2 bg-white rounded border">
+                        <span>Contactor Estrella (KM3):</span>
+                        <span className="font-bold">{result.contactorStar?.toFixed(1)} A</span>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="w-full space-y-4">
-                    <p className="text-sm font-bold text-primary uppercase tracking-widest">Resultado Obtenido</p>
+                    <p className="text-sm font-bold text-primary uppercase tracking-widest">Resultado</p>
                     <h3 className="text-6xl font-black text-primary">
                       {typeof result === 'number' ? result.toLocaleString(undefined, { maximumFractionDigits: 3 }) : '0'}
                       <span className="text-2xl ml-2 text-primary/80">
-                        {activeTab === "potencia" ? "W" : 
-                         activeTab === "corriente" ? "A" : 
-                         activeTab === "seccion" ? "mm²" : "V"}
+                        {activeTab === "potencia" ? "W" : activeTab === "corriente" ? "A" : activeTab === "seccion" ? "mm²" : "V"}
                       </span>
                     </h3>
-                    <div className="pt-4 mt-4 border-t border-primary/10 grid grid-cols-2 gap-4 text-xs text-muted-foreground text-left">
-                      <div><strong>Sistema:</strong> {system}</div>
-                      <div><strong>Tensión:</strong> {v}V</div>
-                      {system !== "DC" && <div><strong>PF:</strong> {pf}</div>}
-                    </div>
                   </div>
                 )}
               </div>
@@ -324,23 +327,20 @@ export default function CalculatorForm() {
         </CardContent>
       </Card>
 
-      {/* Industrial Reference Card */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-primary text-primary-foreground p-6 rounded-2xl">
-          <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
-            <Info className="h-5 w-5" /> Nota Técnica: Estrella-Triángulo
-          </h4>
-          <p className="text-sm opacity-90 leading-relaxed">
-            El arranque Y-Δ reduce la corriente de arranque a 1/3 de la nominal. El relé térmico debe colocarse en serie con las fases del motor (dentro del lazo) y ajustarse a 0.58 x Inom.
-          </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-4 bg-muted/30 border-dashed flex gap-3">
+          <Box className="h-6 w-6 text-primary shrink-0" />
+          <div className="text-sm">
+            <h5 className="font-bold">Nota sobre Instalación</h5>
+            <p className="text-muted-foreground">El tipo de instalación afecta la superficie de disipación (A). Los gabinetes empotrados disipan menos calor que los exentos.</p>
+          </div>
         </Card>
-        <Card className="bg-accent text-accent-foreground p-6 rounded-2xl">
-          <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
-            <Wind className="h-5 w-5" /> Guía de Climatización
-          </h4>
-          <p className="text-sm opacity-90 leading-relaxed">
-            Si la temperatura exterior es mayor a la interior (ΔT negativo), el gabinete absorbe calor del ambiente. Asegúrese de incluir las pérdidas de potencia (Pv) de todos los variadores, PLC y fuentes.
-          </p>
+        <Card className="p-4 bg-muted/30 border-dashed flex gap-3">
+          <Wind className="h-6 w-6 text-accent shrink-0" />
+          <div className="text-sm">
+            <h5 className="font-bold">Carga de Variadores</h5>
+            <p className="text-muted-foreground">Se asume una pérdida promedio del 3% para variadores estándar. Esto incluye las pérdidas por conmutación y resistencia interna.</p>
+          </div>
         </Card>
       </div>
     </div>
