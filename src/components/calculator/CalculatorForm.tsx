@@ -312,32 +312,52 @@ export default function CalculatorForm() {
                     </div>
                   </div>
                 ) : activeTab === "estrella" && typeof result === 'object' && 'relaySetting' in result ? (
-                  <div className="w-full space-y-4">
-                    <div className="mb-6">
-                      <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Corriente Nominal (In)</p>
+                  <div className="w-full space-y-6">
+                    <div>
+                      <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Corriente Nominal (In)</p>
                       <h3 className="text-4xl font-black text-primary">
                         {result.nominalCurrent?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         <span className="text-xl ml-2">A</span>
                       </h3>
                     </div>
                     
-                    <div className="p-4 bg-white rounded-xl border-2 border-primary/10 shadow-sm">
-                      <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Ajuste Relé Térmico (Ir)</p>
+                    <div className="p-4 bg-white rounded-xl border-2 border-primary/20 shadow-sm">
+                      <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Ajuste Relé Térmico (Ir)</p>
                       <h3 className="text-5xl font-black text-primary">
                         {result.relaySetting?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         <span className="text-2xl ml-2">A</span>
                       </h3>
-                      <p className="text-[10px] text-muted-foreground mt-1 font-medium">Relé colocado en serie con fase motor</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 font-medium">Basado en Corriente de Fase (In / 1.73)</p>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-2 mt-4 text-sm">
-                      <div className="flex justify-between p-2 bg-white rounded border">
-                        <span>Contactor Main/Delta (KM1/KM2):</span>
-                        <span className="font-bold">{result.contactorDelta?.toFixed(1)} A</span>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="bg-white p-4 rounded-xl border shadow-sm space-y-3">
+                        <h4 className="text-xs font-bold text-muted-foreground uppercase border-b pb-2 flex items-center justify-between">
+                          <span>Conductores (IEC 60364)</span>
+                          <Ruler className="h-3 w-3" />
+                        </h4>
+                        <div className="flex justify-between items-center">
+                          <div className="text-left">
+                            <span className="block text-[10px] text-muted-foreground uppercase">Línea Principal (3x)</span>
+                            <span className="text-lg font-black text-primary">{result.sectionMain} mm²</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="block text-[10px] text-muted-foreground uppercase">Cables Motor (6x)</span>
+                            <span className="text-lg font-black text-accent">{result.sectionMotor} mm²</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between p-2 bg-white rounded border">
-                        <span>Contactor Estrella (KM3):</span>
-                        <span className="font-bold">{result.contactorStar?.toFixed(1)} A</span>
+
+                      <div className="bg-white p-4 rounded-xl border shadow-sm space-y-2 text-xs">
+                        <h4 className="font-bold text-muted-foreground border-b pb-1 uppercase">Contactores (In min.)</h4>
+                        <div className="flex justify-between">
+                          <span>Main / Delta (KM1/KM2):</span>
+                          <span className="font-bold">{result.contactorDelta?.toFixed(1)} A</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-1">
+                          <span>Estrella (KM3):</span>
+                          <span className="font-bold">{result.contactorStar?.toFixed(1)} A</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -362,15 +382,15 @@ export default function CalculatorForm() {
         <Card className="p-4 bg-muted/30 border-dashed flex gap-3">
           <Box className="h-6 w-6 text-primary shrink-0" />
           <div className="text-sm">
-            <h5 className="font-bold">Nota sobre Instalación</h5>
-            <p className="text-muted-foreground">El tipo de instalación afecta la superficie de disipación (A). Los gabinetes empotrados disipan menos calor que los exentos.</p>
+            <h5 className="font-bold">Normativas Aplicadas</h5>
+            <p className="text-muted-foreground">Cálculos de cables basados en IEC 60364-5-52. Se utiliza Método C (Cobre/PVC) con factor de seguridad de 1.25x para motores.</p>
           </div>
         </Card>
         <Card className="p-4 bg-muted/30 border-dashed flex gap-3">
           <Activity className="h-6 w-6 text-accent shrink-0" />
           <div className="text-sm">
             <h5 className="font-bold">Diseño Estrella-Triángulo</h5>
-            <p className="text-muted-foreground">El relé térmico debe ajustarse a In / 1.73 si se instala en los cables que van al motor (lo más común en industria).</p>
+            <p className="text-muted-foreground">El relé térmico e hilos al motor se dimensionan para la corriente de fase. Los contactores Main y Delta deben soportar el 58% de In.</p>
           </div>
         </Card>
       </div>
