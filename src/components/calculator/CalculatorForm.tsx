@@ -19,7 +19,7 @@ import {
   calculateStarDelta,
   CONDUCTIVITY 
 } from "@/lib/electrical-formulas";
-import { Zap, Activity, Ruler, ArrowDownToLine, Wind, Share2, Info, Box } from "lucide-react";
+import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake } from "lucide-react";
 
 export default function CalculatorForm() {
   const [activeTab, setActiveTab] = useState("potencia");
@@ -31,7 +31,7 @@ export default function CalculatorForm() {
   const [i, setI] = useState("10");
   const [p, setP] = useState("7500");
   const [pf, setPf] = useState("0.85");
-  const [eff, setEff] = useState("90"); // Rendimiento (%)
+  const [eff, setEff] = useState("90");
   const [length, setLength] = useState("50");
   const [section, setSection] = useState("2.5");
   const [maxVd, setMaxVd] = useState("11.4");
@@ -100,16 +100,33 @@ export default function CalculatorForm() {
     setResult(res);
   };
 
+  const getNormativeReference = () => {
+    switch(activeTab) {
+      case "seccion":
+      case "caida":
+        return "IEC 60364-5-52";
+      case "climatizacion":
+        return "IEC 60890";
+      case "estrella":
+        return "IEC 60947-4-1 / 60228";
+      default:
+        return "IEC 60038 / 60364";
+    }
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto p-4 space-y-6">
       <Card className="shadow-lg border-none bg-card/80 backdrop-blur-sm overflow-hidden">
-        <CardHeader className="text-center pb-2 bg-primary/5 border-b mb-6">
+        <CardHeader className="text-center pb-2 bg-primary/5 border-b mb-6 relative">
+          <div className="absolute top-4 right-4 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+            <ShieldCheck className="h-3 w-3" /> {getNormativeReference()}
+          </div>
           <CardTitle className="text-3xl font-black text-primary flex items-center justify-center gap-2">
             <Zap className="h-8 w-8 text-accent fill-accent" />
-            Centro de Ingeniería Eléctrica
+            Ingeniería Eléctrica IEC
           </CardTitle>
           <CardDescription className="text-lg font-medium">
-            Herramientas de precisión para sistemas industriales
+            Cálculos industriales normalizados bajo estándares internacionales
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -120,7 +137,7 @@ export default function CalculatorForm() {
               <TabsTrigger value="seccion" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Sección</TabsTrigger>
               <TabsTrigger value="caida" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Caída</TabsTrigger>
               <TabsTrigger value="climatizacion" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Clima</TabsTrigger>
-              <TabsTrigger value="estrella" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Y-Δ</TabsTrigger>
+              <TabsTrigger value="estrella" className="py-2.5 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white">Arrancadores</TabsTrigger>
             </TabsList>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -128,14 +145,14 @@ export default function CalculatorForm() {
               <div className="space-y-4">
                 {activeTab !== "climatizacion" && activeTab !== "estrella" && (
                   <div className="space-y-2">
-                    <Label>Sistema Eléctrico</Label>
+                    <Label>Sistema Eléctrico (IEC 60038)</Label>
                     <Select value={system} onValueChange={(v) => setSystem(v as SystemType)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="DC">DC</SelectItem>
-                        <SelectItem value="MONO">Monofásico</SelectItem>
-                        <SelectItem value="BI">Bifásico</SelectItem>
-                        <SelectItem value="TRI">Trifásico</SelectItem>
+                        <SelectItem value="DC">DC (Continuo)</SelectItem>
+                        <SelectItem value="MONO">230V Monofásico</SelectItem>
+                        <SelectItem value="BI">400V Bifásico</SelectItem>
+                        <SelectItem value="TRI">400V Trifásico</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -144,31 +161,31 @@ export default function CalculatorForm() {
                 {activeTab === "climatizacion" ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2 col-span-2">
-                      <Label>Material del Tablero</Label>
+                      <Label>Material (IEC 60890 - k disipación)</Label>
                       <Select value={panelMaterial} onValueChange={(v) => setPanelMaterial(v as keyof typeof MATERIAL_K)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="CHAPA_PINTADA">Chapa de Acero Pintada</SelectItem>
-                          <SelectItem value="ACERO_INOX">Acero Inoxidable</SelectItem>
-                          <SelectItem value="ALUMINIO">Aluminio</SelectItem>
-                          <SelectItem value="PLASTICO">Poliéster / Plástico</SelectItem>
+                          <SelectItem value="CHAPA_PINTADA">Chapa de Acero (k=5.5)</SelectItem>
+                          <SelectItem value="ACERO_INOX">Acero Inoxidable (k=3.7)</SelectItem>
+                          <SelectItem value="ALUMINIO">Aluminio (k=12.0)</SelectItem>
+                          <SelectItem value="PLASTICO">Plástico/Poliéster (k=3.5)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2 col-span-2">
-                      <Label>Tipo de Instalación</Label>
+                      <Label>Tipo de Instalación (Superficie efectiva)</Label>
                       <Select value={installation} onValueChange={(v) => setInstallation(v as InstallationType)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="FREE">Exento (Todas las caras libres)</SelectItem>
-                          <SelectItem value="WALL">Contra pared (Espalda cubierta)</SelectItem>
-                          <SelectItem value="ROW">En batería (Lados cubiertos)</SelectItem>
-                          <SelectItem value="RECESSED">Empotrado (Solo frontal libre)</SelectItem>
+                          <SelectItem value="FREE">Exento (6 caras libres)</SelectItem>
+                          <SelectItem value="WALL">Contra pared (5 caras libres)</SelectItem>
+                          <SelectItem value="ROW">En fila (4 caras libres)</SelectItem>
+                          <SelectItem value="RECESSED">Empotrado (1 cara libre)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Cant. Variadores</Label>
+                      <Label>Cant. VFDs</Label>
                       <Input type="number" value={vfdCount} onChange={(e) => setVfdCount(e.target.value)} />
                     </div>
                     <div className="space-y-2">
@@ -184,19 +201,19 @@ export default function CalculatorForm() {
                       <Input type="number" value={panelH} onChange={(e) => setPanelH(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label>Otras Pérdidas (W)</Label>
+                      <Label>Otras Cargas (W)</Label>
                       <Input type="number" value={otherPowerLoss} onChange={(e) => setOtherPowerLoss(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label>Profundidad (mm)</Label>
+                      <Label>Profundo (mm)</Label>
                       <Input type="number" value={panelD} onChange={(e) => setPanelD(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label>T. Interior Deseada (°C)</Label>
+                      <Label>T. Int Deseada (°C)</Label>
                       <Input type="number" value={tInt} onChange={(e) => setTInt(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label>T. Exterior Máx (°C)</Label>
+                      <Label>T. Ext Máx (°C)</Label>
                       <Input type="number" value={tExt} onChange={(e) => setTExt(e.target.value)} />
                     </div>
                   </div>
@@ -211,7 +228,7 @@ export default function CalculatorForm() {
                       <Input type="number" value={v} onChange={(e) => setV(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label>Factor de Potencia (cos φ)</Label>
+                      <Label>cos φ (Nominal)</Label>
                       <Input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} />
                     </div>
                     <div className="space-y-2">
@@ -237,7 +254,7 @@ export default function CalculatorForm() {
                     )}
                     {system !== "DC" && (
                       <div className="space-y-2">
-                        <Label>cos φ</Label>
+                        <Label>Factor de Potencia</Label>
                         <Input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} />
                       </div>
                     )}
@@ -248,12 +265,12 @@ export default function CalculatorForm() {
                           <Input type="number" value={length} onChange={(e) => setLength(e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                          <Label>Material</Label>
+                          <Label>Conductor (IEC 60228)</Label>
                           <Select value={material} onValueChange={(v) => setMaterial(v as keyof typeof CONDUCTIVITY)}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="COBRE">Cobre</SelectItem>
-                              <SelectItem value="ALUMINIO">Aluminio</SelectItem>
+                              <SelectItem value="COBRE">Cobre electrolítico</SelectItem>
+                              <SelectItem value="ALUMINIO">Aluminio industrial</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -264,7 +281,7 @@ export default function CalculatorForm() {
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            <Label>ΔV Máx (V)</Label>
+                            <Label>ΔV Admisible (V)</Label>
                             <Input type="number" value={maxVd} onChange={(e) => setMaxVd(e.target.value)} />
                           </div>
                         )}
@@ -274,7 +291,7 @@ export default function CalculatorForm() {
                 )}
 
                 <Button onClick={handleCalculate} className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-lg shadow-lg">
-                  CALCULAR
+                  CALCULAR BAJO IEC
                 </Button>
               </div>
 
@@ -283,30 +300,32 @@ export default function CalculatorForm() {
                 {result === null ? (
                   <div className="text-muted-foreground">
                     <Info className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                    <p>Ingrese los datos técnicos para obtener resultados.</p>
+                    <p>Seleccione una pestaña y complete los datos para aplicar las normas IEC correspondientes.</p>
                   </div>
                 ) : activeTab === "climatizacion" && typeof result === 'object' && 'coolingPower' in result ? (
                   <div className="w-full space-y-4">
-                    <p className="text-sm font-bold text-primary uppercase tracking-widest">Potencia Frigorífica Requerida</p>
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-1">
+                      <ThermometerSnowflake className="h-3 w-3" /> Potencia Frigorífica Necesaria
+                    </p>
                     <h3 className="text-5xl font-black text-primary">
                       {result.coolingPower?.toLocaleString(undefined, { maximumFractionDigits: 1 })}
                       <span className="text-2xl ml-2">W</span>
                     </h3>
-                    <div className="grid grid-cols-2 gap-3 mt-4 text-xs text-left">
+                    <div className="grid grid-cols-2 gap-3 mt-4 text-[10px] text-left">
                       <div className="bg-white p-2 rounded border">
-                        <span className="block text-muted-foreground">Pérdida VFD:</span>
+                        <span className="block text-muted-foreground">Pv Variadores:</span>
                         <span className="font-bold">{result.vfdLosses?.toFixed(1)} W</span>
                       </div>
                       <div className="bg-white p-2 rounded border">
-                        <span className="block text-muted-foreground">Pérdida Total (Pv):</span>
+                        <span className="block text-muted-foreground">Pérdidas Totales:</span>
                         <span className="font-bold">{result.totalPowerLoss?.toFixed(1)} W</span>
                       </div>
                       <div className="bg-white p-2 rounded border">
-                        <span className="block text-muted-foreground">Sup. Efectiva (A):</span>
+                        <span className="block text-muted-foreground">Superficie A (IEC 60890):</span>
                         <span className="font-bold">{result.surfaceArea?.toFixed(2)} m²</span>
                       </div>
                       <div className="bg-white p-2 rounded border">
-                        <span className="block text-muted-foreground">ΔT (Ti - Te):</span>
+                        <span className="block text-muted-foreground">ΔT Térmico:</span>
                         <span className="font-bold">{result.deltaT} °C</span>
                       </div>
                     </div>
@@ -314,7 +333,7 @@ export default function CalculatorForm() {
                 ) : activeTab === "estrella" && typeof result === 'object' && 'relaySetting' in result ? (
                   <div className="w-full space-y-6">
                     <div>
-                      <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Corriente Nominal (In)</p>
+                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Corriente Nominal del Motor</p>
                       <h3 className="text-4xl font-black text-primary">
                         {result.nominalCurrent?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         <span className="text-xl ml-2">A</span>
@@ -322,40 +341,40 @@ export default function CalculatorForm() {
                     </div>
                     
                     <div className="p-4 bg-white rounded-xl border-2 border-primary/20 shadow-sm">
-                      <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Ajuste Relé Térmico (Ir)</p>
+                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Ajuste de Protección Térmica</p>
                       <h3 className="text-5xl font-black text-primary">
                         {result.relaySetting?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         <span className="text-2xl ml-2">A</span>
                       </h3>
-                      <p className="text-[10px] text-muted-foreground mt-1 font-medium">Basado en Corriente de Fase (In / 1.73)</p>
+                      <p className="text-[9px] text-muted-foreground mt-1 font-medium">Dimensionado para corriente de fase (In / 1.73)</p>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4">
                       <div className="bg-white p-4 rounded-xl border shadow-sm space-y-3">
-                        <h4 className="text-xs font-bold text-muted-foreground uppercase border-b pb-2 flex items-center justify-between">
-                          <span>Conductores (IEC 60364)</span>
+                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase border-b pb-2 flex items-center justify-between">
+                          <span>Conductores (IEC 60364-5-52)</span>
                           <Ruler className="h-3 w-3" />
                         </h4>
                         <div className="flex justify-between items-center">
                           <div className="text-left">
-                            <span className="block text-[10px] text-muted-foreground uppercase">Línea Principal (3x)</span>
+                            <span className="block text-[9px] text-muted-foreground uppercase">Alimentación In</span>
                             <span className="text-lg font-black text-primary">{result.sectionMain} mm²</span>
                           </div>
                           <div className="text-right">
-                            <span className="block text-[10px] text-muted-foreground uppercase">Cables Motor (6x)</span>
+                            <span className="block text-[9px] text-muted-foreground uppercase">Hacia Motor (6 hilos)</span>
                             <span className="text-lg font-black text-accent">{result.sectionMotor} mm²</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="bg-white p-4 rounded-xl border shadow-sm space-y-2 text-xs">
-                        <h4 className="font-bold text-muted-foreground border-b pb-1 uppercase">Contactores (In min.)</h4>
+                      <div className="bg-white p-4 rounded-xl border shadow-sm space-y-2 text-[10px]">
+                        <h4 className="font-bold text-muted-foreground border-b pb-1 uppercase">Switchgear (IEC 60947-4-1)</h4>
                         <div className="flex justify-between">
-                          <span>Main / Delta (KM1/KM2):</span>
+                          <span>KM1 / KM2 (Linea/Delta):</span>
                           <span className="font-bold">{result.contactorDelta?.toFixed(1)} A</span>
                         </div>
                         <div className="flex justify-between border-t pt-1">
-                          <span>Estrella (KM3):</span>
+                          <span>KM3 (Estrella):</span>
                           <span className="font-bold">{result.contactorStar?.toFixed(1)} A</span>
                         </div>
                       </div>
@@ -363,7 +382,7 @@ export default function CalculatorForm() {
                   </div>
                 ) : (
                   <div className="w-full space-y-4">
-                    <p className="text-sm font-bold text-primary uppercase tracking-widest">Resultado</p>
+                    <p className="text-sm font-bold text-primary uppercase tracking-widest">Valor Resultante</p>
                     <h3 className="text-6xl font-black text-primary">
                       {typeof result === 'number' ? result.toLocaleString(undefined, { maximumFractionDigits: 3 }) : '0'}
                       <span className="text-2xl ml-2 text-primary/80">
@@ -382,15 +401,15 @@ export default function CalculatorForm() {
         <Card className="p-4 bg-muted/30 border-dashed flex gap-3">
           <Box className="h-6 w-6 text-primary shrink-0" />
           <div className="text-sm">
-            <h5 className="font-bold">Normativas Aplicadas</h5>
-            <p className="text-muted-foreground">Cálculos de cables basados en IEC 60364-5-52. Se utiliza Método C (Cobre/PVC) con factor de seguridad de 1.25x para motores.</p>
+            <h5 className="font-bold">Normalización IEC</h5>
+            <p className="text-muted-foreground">Los calibres de cables se obtienen de la tabla de ampacidad <strong>IEC 60364-5-52</strong> para Método C, garantizando seguridad térmica bajo carga continua.</p>
           </div>
         </Card>
         <Card className="p-4 bg-muted/30 border-dashed flex gap-3">
-          <Activity className="h-6 w-6 text-accent shrink-0" />
+          <ShieldCheck className="h-6 w-6 text-accent shrink-0" />
           <div className="text-sm">
-            <h5 className="font-bold">Diseño Estrella-Triángulo</h5>
-            <p className="text-muted-foreground">El relé térmico e hilos al motor se dimensionan para la corriente de fase. Los contactores Main y Delta deben soportar el 58% de In.</p>
+            <h5 className="font-bold">Cumplimiento Industrial</h5>
+            <p className="text-muted-foreground">Dimensionamiento de aparellaje motor según <strong>IEC 60947</strong> para categorías de empleo AC-3. Secciones transversales normalizadas por <strong>IEC 60228</strong>.</p>
           </div>
         </Card>
       </div>

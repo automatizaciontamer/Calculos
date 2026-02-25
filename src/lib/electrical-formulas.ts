@@ -1,10 +1,18 @@
 export type SystemType = 'DC' | 'MONO' | 'BI' | 'TRI';
 
+/** 
+ * IEC 60228: Conductores de cables aislados. 
+ * Valores de conductividad estándar a 20°C.
+ */
 export const CONDUCTIVITY = {
-  COBRE: 56,
-  ALUMINIO: 35,
+  COBRE: 56, // MS/m
+  ALUMINIO: 35, // MS/m
 };
 
+/**
+ * IEC 60890: Método de verificación del aumento de temperatura.
+ * Coeficientes de transmisión térmica k (W/m²·K).
+ */
 export const MATERIAL_K = {
   CHAPA_PINTADA: 5.5,
   ACERO_INOX: 3.7,
@@ -14,8 +22,11 @@ export const MATERIAL_K = {
 
 export type InstallationType = 'FREE' | 'WALL' | 'ROW' | 'RECESSED';
 
-// Tabla simplificada de ampacidad basada en IEC 60364-5-52 
-// (Método C: Cables sobre pared de madera/mampostería, Cobre, PVC)
+/**
+ * IEC 60364-5-52: Selección y montaje de equipos eléctricos - Canalizaciones.
+ * Tabla de ampacidad simplificada para Método de Instalación C (Cables sobre pared).
+ * Aislamiento PVC 70°C, Temp. ambiente 30°C.
+ */
 const IEC_AMPACITY_TABLE = [
   { section: 1.5, current: 14.5 },
   { section: 2.5, current: 19.5 },
@@ -36,7 +47,8 @@ const IEC_AMPACITY_TABLE = [
 ];
 
 const getIECSection = (current: number): number => {
-  const safetyFactor = 1.25; // Factor de seguridad estándar para motores
+  // Aplicamos factor de seguridad según IEC 60364 para cargas de motor (habitualmente 1.25 * In)
+  const safetyFactor = 1.25;
   const targetCurrent = current * safetyFactor;
   const match = IEC_AMPACITY_TABLE.find(entry => entry.current >= targetCurrent);
   return match ? match.section : IEC_AMPACITY_TABLE[IEC_AMPACITY_TABLE.length - 1].section;
@@ -83,6 +95,9 @@ export const calculateCurrent = (
   }
 };
 
+/**
+ * Cálculo de Caída de Tensión basado en IEC 60364-5-52.
+ */
 export const calculateVoltageDrop = (
   current: number,
   length: number,
@@ -107,6 +122,9 @@ export const calculateVoltageDrop = (
   }
 };
 
+/**
+ * Cálculo de Sección de Conductor basado en IEC 60364-5-52 por caída de tensión admisible.
+ */
 export const calculateCableSection = (
   current: number,
   length: number,
@@ -132,7 +150,7 @@ export const calculateCableSection = (
 };
 
 /**
- * Calcula la potencia de refrigeración necesaria para un tablero eléctrico.
+ * IEC 60890: Cálculo de la potencia de refrigeración necesaria para envolventes.
  */
 export const calculatePanelCooling = (
   width: number, // mm
@@ -150,6 +168,7 @@ export const calculatePanelCooling = (
   const h = height / 1000;
   const d = depth / 1000;
 
+  // Cálculo de superficie efectiva de intercambio A según tipo de montaje (IEC 60890)
   let A = 0;
   switch (installation) {
     case 'FREE': 
@@ -166,10 +185,13 @@ export const calculatePanelCooling = (
       break;
   }
   
+  // Estimación de pérdidas térmicas VFD (típico 3% según guías técnicas de fabricantes bajo IEC)
   const vfdLosses = vfdCount * (vfdPowerKw * 1000) * 0.03;
   const totalPowerLoss = otherPowerLoss + vfdLosses;
   const deltaT = tInternal - tExternal;
   const k = MATERIAL_K[materialKey];
+  
+  // Potencia frigorífica requerida P_req = P_v - k * A * deltaT
   const coolingPower = totalPowerLoss - (k * A * deltaT);
   
   return {
@@ -181,6 +203,10 @@ export const calculatePanelCooling = (
   };
 };
 
+/**
+ * IEC 60947-4-1: Aparellaje de baja tensión - Contactores y arrancadores de motor.
+ * Dimensionamiento para arranque Estrella-Triángulo.
+ */
 export const calculateStarDelta = (
   power: number,
   voltage: number,
@@ -190,15 +216,14 @@ export const calculateStarDelta = (
   const denominator = Math.sqrt(3) * voltage * pf * (efficiency / 100);
   const nominalCurrent = denominator > 0 ? power / denominator : 0;
   
-  // Corriente de fase (por los devanados en Delta): In / sqrt(3)
+  // IEC 60947-4-1 define que para Y-Δ:
+  // Corriente de fase (en los devanados del motor y relé térmico): In / sqrt(3)
   const iPhase = nominalCurrent / Math.sqrt(3);
   // Corriente en el contactor de Estrella: In / 3
   const iStar = nominalCurrent / 3;
 
-  // Dimensionamiento de conductores IEC 60364
-  // 1. Cables de línea (alimentación tablero): Soportan In
+  // Dimensionamiento de conductores IEC 60364-5-52 y IEC 60228
   const sectionMain = getIECSection(nominalCurrent);
-  // 2. Cables de motor (6 hilos): Soportan In / sqrt(3)
   const sectionMotor = getIECSection(iPhase);
   
   return {
