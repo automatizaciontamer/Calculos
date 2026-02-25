@@ -251,23 +251,23 @@ export default function CalculatorForm() {
                     <Info className="h-12 w-12 mx-auto mb-4 opacity-20" />
                     <p>Complete los datos y presione calcular para ver los resultados técnicos.</p>
                   </div>
-                ) : activeTab === "climatizacion" ? (
+                ) : activeTab === "climatizacion" && typeof result === 'object' && 'coolingPower' in result ? (
                   <div className="w-full space-y-6">
                     <div>
                       <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Potencia Refrigeración Requerida</p>
                       <h3 className="text-5xl font-black text-primary">
-                        {result.coolingPower.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                        {result.coolingPower?.toLocaleString(undefined, { maximumFractionDigits: 1 }) ?? '0'}
                         <span className="text-2xl ml-2">W</span>
                       </h3>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm bg-white p-4 rounded-xl shadow-sm">
                       <div className="text-left">
                         <span className="text-muted-foreground block">Área Gabinete:</span>
-                        <span className="font-bold">{result.surfaceArea.toFixed(2)} m²</span>
+                        <span className="font-bold">{result.surfaceArea?.toFixed(2) ?? '0.00'} m²</span>
                       </div>
                       <div className="text-left">
                         <span className="text-muted-foreground block">ΔT (Ti - Te):</span>
-                        <span className="font-bold">{result.deltaT} °C</span>
+                        <span className="font-bold">{result.deltaT ?? '0'} °C</span>
                       </div>
                     </div>
                     {result.coolingPower > 0 ? (
@@ -276,27 +276,27 @@ export default function CalculatorForm() {
                       <p className="text-xs text-green-600 font-medium">La disipación natural es suficiente para mantener la temperatura.</p>
                     )}
                   </div>
-                ) : activeTab === "estrella" ? (
+                ) : activeTab === "estrella" && typeof result === 'object' && 'relaySetting' in result ? (
                   <div className="w-full space-y-6">
                     <div>
                       <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Ajuste Relé Térmico (Ir)</p>
                       <h3 className="text-5xl font-black text-primary">
-                        {result.relaySetting.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        {result.relaySetting?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? '0'}
                         <span className="text-2xl ml-2">A</span>
                       </h3>
                     </div>
                     <div className="grid grid-cols-1 gap-3 text-sm">
                       <div className="flex justify-between p-3 bg-white rounded-lg shadow-sm">
                         <span className="text-muted-foreground">Contactor Principal (KM1):</span>
-                        <span className="font-bold text-primary">{result.contactorMain.toFixed(2)} A</span>
+                        <span className="font-bold text-primary">{result.contactorMain?.toFixed(2) ?? '0.00'} A</span>
                       </div>
                       <div className="flex justify-between p-3 bg-white rounded-lg shadow-sm">
                         <span className="text-muted-foreground">Contactor Triángulo (KM2):</span>
-                        <span className="font-bold text-primary">{result.contactorDelta.toFixed(2)} A</span>
+                        <span className="font-bold text-primary">{result.contactorDelta?.toFixed(2) ?? '0.00'} A</span>
                       </div>
                       <div className="flex justify-between p-3 bg-white rounded-lg shadow-sm">
                         <span className="text-muted-foreground">Contactor Estrella (KM3):</span>
-                        <span className="font-bold text-primary">{result.contactorStar.toFixed(2)} A</span>
+                        <span className="font-bold text-primary">{result.contactorStar?.toFixed(2) ?? '0.00'} A</span>
                       </div>
                     </div>
                   </div>
