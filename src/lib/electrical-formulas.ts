@@ -30,6 +30,13 @@ export const COMMERCIAL_SECTIONS = [
 ];
 
 /**
+ * Calibres comerciales estándar para interruptores termomagnéticos (A).
+ */
+export const BREAKER_RATINGS = [
+  6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125
+];
+
+/**
  * IEC 60364-5-52: Selección y montaje de equipos eléctricos - Canalizaciones.
  */
 const IEC_AMPACITY_TABLE = [
@@ -260,6 +267,45 @@ export const calculateStarDelta = (
     contactorStar: iStar,
     sectionMain,
     sectionMotor
+  };
+};
+
+/**
+ * Cálculo de protección DOL (Arranque Directo).
+ */
+export const calculateMotorProtection = (
+  power: number,
+  voltage: number,
+  pf: number,
+  efficiency: number,
+  type: 'GUARDAMOTOR' | 'TERMOMAGNETICA',
+  system: SystemType = 'TRI'
+) => {
+  const denominator = system === 'TRI' 
+    ? Math.sqrt(3) * voltage * pf * (efficiency / 100)
+    : voltage * pf * (efficiency / 100);
+  
+  const nominalCurrent = denominator > 0 ? power / denominator : 0;
+  const section = getAmpacitySection(nominalCurrent);
+  
+  let protectionSetting = "";
+  if (type === 'GUARDAMOTOR') {
+    // Rango sugerido +/- 10%
+    const min = nominalCurrent * 0.9;
+    const max = nominalCurrent * 1.1;
+    protectionSetting = `${min.toFixed(1)} - ${max.toFixed(1)} A`;
+  } else {
+    // Termomagnética curva D o K (1.25x In para evitar disparo por arranque)
+    const target = nominalCurrent * 1.25;
+    const rating = BREAKER_RATINGS.find(r => r >= target) || BREAKER_RATINGS[BREAKER_RATINGS.length - 1];
+    protectionSetting = `${rating} A (Curva D/K)`;
+  }
+
+  return {
+    nominalCurrent,
+    protectionSetting,
+    section,
+    commercialSection: getCommercialSection(section)
   };
 };
 

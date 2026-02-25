@@ -20,12 +20,13 @@ import {
   calculateCableSection, 
   calculatePanelCooling,
   calculateStarDelta,
+  calculateMotorProtection,
   calculateTransmission,
   calculateResistor,
   TransmissionStage,
   CONDUCTIVITY 
 } from "@/lib/electrical-formulas";
-import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake, Settings2, Plus, Trash2, ArrowRightLeft, MoveHorizontal, Cpu, Palette } from "lucide-react";
+import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake, Settings2, Plus, Trash2, ArrowRightLeft, MoveHorizontal, Cpu, Palette, ShieldAlert } from "lucide-react";
 
 export default function CalculatorForm() {
   const [activeTab, setActiveTab] = useState("potencia");
@@ -55,6 +56,9 @@ export default function CalculatorForm() {
   const [tExt, setTExt] = useState("45");
   const [panelMaterial, setPanelMaterial] = useState<keyof typeof MATERIAL_K>("CHAPA_PINTADA");
   const [installation, setInstallation] = useState<InstallationType>("WALL");
+
+  // Inputs Protección Motor
+  const [motorProtectionType, setMotorProtectionType] = useState<'GUARDAMOTOR' | 'TERMOMAGNETICA'>('GUARDAMOTOR');
 
   // Inputs Transmisión / Mecánica
   const [transSpeed, setTransSpeed] = useState("1450");
@@ -129,6 +133,9 @@ export default function CalculatorForm() {
       case "estrella":
         res = calculateStarDelta(powerNum, voltageNum, pfNum, effNum);
         break;
+      case "proteccion":
+        res = calculateMotorProtection(powerNum, voltageNum, pfNum, effNum, motorProtectionType, system);
+        break;
       case "transmision":
         res = calculateTransmission(
           parseFloat(transSpeed), 
@@ -153,7 +160,8 @@ export default function CalculatorForm() {
       case "climatizacion":
         return "IEC 60890";
       case "estrella":
-        return "IEC 60947-4-1";
+      case "proteccion":
+        return "IEC 60947-4-1 / 60364";
       case "transmision":
         return transMotionType === 'LINEAR' ? "ISO 13012" : "ISO 6336";
       case "resistencia":
@@ -194,13 +202,14 @@ export default function CalculatorForm() {
         </CardHeader>
         <CardContent className="px-4 md:px-8 pb-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-8 h-auto p-1.5 bg-muted/50 gap-1.5 rounded-2xl mb-8 overflow-x-auto scrollbar-hide">
+            <TabsList className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-9 h-auto p-1.5 bg-muted/50 gap-1.5 rounded-2xl mb-8 overflow-x-auto scrollbar-hide">
               <TabsTrigger value="potencia" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Potencia</TabsTrigger>
               <TabsTrigger value="corriente" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Corriente</TabsTrigger>
               <TabsTrigger value="seccion" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Sección</TabsTrigger>
               <TabsTrigger value="caida" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Caída</TabsTrigger>
               <TabsTrigger value="climatizacion" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Clima</TabsTrigger>
               <TabsTrigger value="estrella" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Y-Δ</TabsTrigger>
+              <TabsTrigger value="proteccion" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">DOL Prot.</TabsTrigger>
               <TabsTrigger value="transmision" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Mecánica</TabsTrigger>
               <TabsTrigger value="resistencia" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Color Ω</TabsTrigger>
             </TabsList>
@@ -208,7 +217,7 @@ export default function CalculatorForm() {
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
               {/* Form Side */}
               <div className="lg:col-span-3 space-y-6">
-                {activeTab !== "climatizacion" && activeTab !== "estrella" && activeTab !== "transmision" && activeTab !== "resistencia" && (
+                {(activeTab !== "climatizacion" && activeTab !== "estrella" && activeTab !== "transmision" && activeTab !== "resistencia" && activeTab !== "proteccion") && (
                   <div className="space-y-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Sistema Eléctrico (IEC 60038)</Label>
                     <Select value={system} onValueChange={(v) => setSystem(v as SystemType)}>
@@ -296,7 +305,6 @@ export default function CalculatorForm() {
                         </Select>
                       </div>
                     </div>
-                    {/* ... rest of transmisión inputs ... */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-xs uppercase font-bold text-muted-foreground">
@@ -389,23 +397,47 @@ export default function CalculatorForm() {
                       <input type="number" value={tExt} onChange={(e) => setTExt(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                   </div>
-                ) : activeTab === "estrella" ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase font-bold text-muted-foreground">Potencia Motor (W)</Label>
-                      <input type="number" value={p} onChange={(e) => setP(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase font-bold text-muted-foreground">Tensión (V)</Label>
-                      <input type="number" value={v} onChange={(e) => setV(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase font-bold text-muted-foreground">cos φ (Placa)</Label>
-                      <input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase font-bold text-muted-foreground">Rendimiento η (%)</Label>
-                      <input type="number" value={eff} onChange={(e) => setEff(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                ) : (activeTab === "estrella" || activeTab === "proteccion") ? (
+                  <div className="space-y-6">
+                    {activeTab === "proteccion" && (
+                      <div className="space-y-2">
+                        <Label className="text-xs uppercase font-bold text-muted-foreground">Tipo de Protección</Label>
+                        <Select value={motorProtectionType} onValueChange={(v) => setMotorProtectionType(v as any)}>
+                          <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="GUARDAMOTOR">Guardamotor (Ajustable)</SelectItem>
+                            <SelectItem value="TERMOMAGNETICA">Termomagnética (Calibre Fijo)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs uppercase font-bold text-muted-foreground">Sistema Eléctrico</Label>
+                        <Select value={system} onValueChange={(v) => setSystem(v as SystemType)}>
+                          <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="MONO">230V Monofásico</SelectItem>
+                            <SelectItem value="TRI">400V Trifásico</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs uppercase font-bold text-muted-foreground">Potencia Motor (W)</Label>
+                        <input type="number" value={p} onChange={(e) => setP(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs uppercase font-bold text-muted-foreground">Tensión (V)</Label>
+                        <input type="number" value={v} onChange={(e) => setV(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs uppercase font-bold text-muted-foreground">cos φ (Placa)</Label>
+                        <input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs uppercase font-bold text-muted-foreground">Rendimiento η (%)</Label>
+                        <input type="number" value={eff} onChange={(e) => setEff(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -653,6 +685,43 @@ export default function CalculatorForm() {
                           </div>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                ) : activeTab === "proteccion" && typeof result === 'object' && 'protectionSetting' in result ? (
+                  <div className="w-full space-y-6 relative z-10 text-left">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center gap-1.5 justify-center">
+                      <ShieldAlert className="h-4 w-4" /> DIMENSIONAMIENTO DE PROTECCIÓN
+                    </p>
+                    
+                    <div className="bg-white p-5 rounded-3xl border-2 border-primary/10 shadow-lg space-y-4">
+                      <div>
+                        <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">
+                          {motorProtectionType === 'GUARDAMOTOR' ? 'AJUSTE SUGERIDO (Ir)' : 'CALIBRE DEL INTERRUPTOR'}
+                        </span>
+                        <h3 className="text-4xl font-black text-primary tabular-nums">
+                          {result.protectionSetting}
+                        </h3>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-dashed">
+                        <div className="p-2 bg-white rounded-lg shadow-sm">
+                          <Activity className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <span className="block text-[10px] text-muted-foreground font-bold">CORRIENTE NOMINAL (In)</span>
+                          <span className="text-sm font-black text-primary">{result.nominalCurrent?.toFixed(2)} A</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-accent/5 p-5 rounded-3xl border-2 border-accent/10 shadow-md space-y-2">
+                      <span className="block text-[10px] text-accent uppercase font-bold tracking-wider">CONDUCTOR RECOMENDADO (IEC 60364)</span>
+                      <h4 className="text-3xl font-black text-accent tabular-nums">
+                        {result.commercialSection} <span className="text-sm">mm²</span>
+                      </h4>
+                      <p className="text-[9px] text-muted-foreground leading-tight">
+                        Cálculo basado en ampacidad para servicio continuo de motor. Se recomienda verificar caída de tensión según longitud.
+                      </p>
                     </div>
                   </div>
                 ) : (
