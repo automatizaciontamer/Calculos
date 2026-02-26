@@ -2,7 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'ElectroCalculadora | Cálculos Eléctricos de Precisión',
+  title: 'Tamer Industrial S.A. | Cálculos Automatizacion',
   description: 'Calculadora de potencia, corriente, sección de cable y caída de tensión para sistemas DC, Monofásicos y Trifásicos.',
 };
 
