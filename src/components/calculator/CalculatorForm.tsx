@@ -496,8 +496,15 @@ export default function CalculatorForm() {
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            <Label className="text-xs uppercase font-bold text-muted-foreground">ΔV Admisible (V)</Label>
-                            <input type="number" value={maxVd} onChange={(e) => setMaxVd(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                            <Label className="text-xs uppercase font-bold text-muted-foreground">Caída de Tensión Máx. (ΔV en Voltios)</Label>
+                            <input 
+                              type="number" 
+                              value={maxVd} 
+                              onChange={(e) => setMaxVd(e.target.value)} 
+                              className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" 
+                              placeholder="Ejem: 6.6V (3% en 220V) o 11.4V (3% en 380V)"
+                            />
+                            <p className="text-[10px] text-muted-foreground italic">Referencia IEC: 3% Alumbrado / 5% Fuerza</p>
                           </div>
                         )}
                       </>
