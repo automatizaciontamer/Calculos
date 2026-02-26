@@ -5,10 +5,9 @@ const nextConfig: NextConfig = {
   output: 'export',
   distDir: 'out',
   
-  // IMPORTANTE: Este basePath debe coincidir con el nombre de tu repositorio en GitHub
-  // Si tu repo se llama "studio", mantenlo así.
-  // En desarrollo (Studio), Next.js detectará esta ruta automáticamente.
-  basePath: '/studio',
+  // Si estamos en producción (GitHub Actions), usamos /studio
+  // En desarrollo (Studio local), usamos la raíz '' para evitar el error 404
+  basePath: process.env.NODE_ENV === 'production' ? '/studio' : '',
   
   images: {
     unoptimized: true,
