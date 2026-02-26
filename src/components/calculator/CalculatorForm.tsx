@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -26,7 +25,7 @@ import {
   TransmissionStage,
   CONDUCTIVITY 
 } from "@/lib/electrical-formulas";
-import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake, Settings2, Plus, Trash2, ArrowRightLeft, MoveHorizontal, Cpu, Palette, ShieldAlert } from "lucide-react";
+import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake, Settings2, Plus, Trash2, ArrowRightLeft, MoveHorizontal, Cpu, Palette, ShieldAlert, Wind } from "lucide-react";
 
 export default function CalculatorForm() {
   const [activeTab, setActiveTab] = useState("potencia");
@@ -46,6 +45,7 @@ export default function CalculatorForm() {
   const [isSingleCore, setIsSingleCore] = useState(false);
 
   // Inputs Climatización
+  const [coolingMode, setCoolingMode] = useState<'AC' | 'VENT'>('AC');
   const [panelW, setPanelW] = useState("800");
   const [panelH, setPanelH] = useState("1200");
   const [panelD, setPanelD] = useState("400");
@@ -127,7 +127,8 @@ export default function CalculatorForm() {
           parseFloat(tInt),
           parseFloat(tExt),
           panelMaterial,
-          installation
+          installation,
+          coolingMode
         );
         break;
       case "estrella":
@@ -349,6 +350,16 @@ export default function CalculatorForm() {
                 ) : activeTab === "climatizacion" ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                     <div className="space-y-2 sm:col-span-2">
+                      <Label className="text-xs uppercase font-bold text-muted-foreground">Tipo de Climatización</Label>
+                      <Select value={coolingMode} onValueChange={(v) => setCoolingMode(v as 'AC' | 'VENT')}>
+                        <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="AC">Aire Acondicionado (Control Térmico)</SelectItem>
+                          <SelectItem value="VENT">Ventilación Forzada (Extracción)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 sm:col-span-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Material (IEC 60890)</Label>
                       <Select value={panelMaterial} onValueChange={(v) => setPanelMaterial(v as keyof typeof MATERIAL_K)}>
                         <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
@@ -389,7 +400,7 @@ export default function CalculatorForm() {
                       <input type="number" value={panelH} onChange={(e) => setPanelH(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase font-bold text-muted-foreground">T. Int Deseada (°C)</Label>
+                      <Label className="text-xs uppercase font-bold text-muted-foreground">T. Int Máx (°C)</Label>
                       <input type="number" value={tInt} onChange={(e) => setTInt(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                     </div>
                     <div className="space-y-2">
@@ -604,16 +615,22 @@ export default function CalculatorForm() {
                       </div>
                     </div>
                   </div>
-                ) : activeTab === "climatizacion" && typeof result === 'object' && 'coolingPower' in result ? (
+                ) : activeTab === "climatizacion" && typeof result === 'object' && ('coolingPower' in result || 'airflow' in result) ? (
                   <div className="w-full space-y-6 relative z-10">
                     <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-1.5">
-                      <ThermometerSnowflake className="h-4 w-4" /> POTENCIA FRIGORÍFICA REQUERIDA
+                      {result.mode === 'AC' ? <ThermometerSnowflake className="h-4 w-4" /> : <Wind className="h-4 w-4" />}
+                      {result.mode === 'AC' ? 'POTENCIA FRIGORÍFICA REQUERIDA' : 'CAUDAL DE VENTILACIÓN REQUERIDO'}
                     </p>
                     <div className="space-y-1">
                       <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums">
-                        {result.coolingPower?.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                        {result.mode === 'AC' 
+                          ? result.coolingPower?.toLocaleString(undefined, { maximumFractionDigits: 1 })
+                          : result.airflow?.toLocaleString(undefined, { maximumFractionDigits: 1 })
+                        }
                       </h3>
-                      <span className="text-xl md:text-2xl font-bold text-primary/60">W</span>
+                      <span className="text-xl md:text-2xl font-bold text-primary/60">
+                        {result.mode === 'AC' ? 'W' : 'm³/h'}
+                      </span>
                     </div>
                     <div className="grid grid-cols-2 gap-3 mt-8 text-left">
                       <div className="bg-white p-3 rounded-xl border shadow-sm col-span-2">
@@ -629,6 +646,9 @@ export default function CalculatorForm() {
                         <span className="text-sm font-bold text-accent">{result.deltaT} °C</span>
                       </div>
                     </div>
+                    {result.airflow === 0 && result.mode === 'VENT' && result.totalPowerLoss > 0 && (
+                       <p className="text-[10px] text-green-600 font-bold bg-green-50 p-2 rounded-lg">La disipación pasiva de la superficie es suficiente.</p>
+                    )}
                   </div>
                 ) : activeTab === "estrella" && typeof result === 'object' && 'relaySetting' in result ? (
                   <div className="w-full space-y-4 relative z-10 text-left overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">

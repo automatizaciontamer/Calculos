@@ -208,7 +208,8 @@ export const calculatePanelCooling = (
   tInternal: number,
   tExternal: number,
   materialKey: keyof typeof MATERIAL_K,
-  installation: InstallationType
+  installation: InstallationType,
+  mode: 'AC' | 'VENT' = 'AC'
 ) => {
   const w = width / 1000;
   const h = height / 1000;
@@ -235,15 +236,32 @@ export const calculatePanelCooling = (
   const deltaT = tInternal - tExternal;
   const k = MATERIAL_K[materialKey];
   
-  const coolingPower = totalPowerLoss - (k * A * deltaT);
-  
-  return {
-    coolingPower: Math.max(0, coolingPower),
-    totalPowerLoss,
-    vfdLosses,
-    surfaceArea: A,
-    deltaT: deltaT
-  };
+  const dissipatedBySurface = k * A * deltaT;
+  const netPowerToCool = totalPowerLoss - dissipatedBySurface;
+
+  if (mode === 'AC') {
+    return {
+      coolingPower: Math.max(0, netPowerToCool),
+      totalPowerLoss,
+      vfdLosses,
+      surfaceArea: A,
+      deltaT: deltaT,
+      mode: 'AC'
+    };
+  } else {
+    // Fórmulas para ventilación forzada: V [m3/h] = (f * Pv) / ΔT
+    // f = 3.1 para aire a nivel del mar.
+    // Usamos el neto de potencia a disipar si es positivo.
+    const airflow = netPowerToCool > 0 ? (3.1 * netPowerToCool) / Math.abs(deltaT || 1) : 0;
+    return {
+      airflow: airflow,
+      totalPowerLoss,
+      vfdLosses,
+      surfaceArea: A,
+      deltaT: deltaT,
+      mode: 'VENT'
+    };
+  }
 };
 
 export const calculateStarDelta = (
