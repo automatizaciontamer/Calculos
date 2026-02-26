@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   distDir: 'out',
   
   // CONFIGURACIÓN PARA https://github.com/automatizaciontamer/studio
+  // Usamos el basePath solo en producción para que el previsualizador del Studio funcione en la raíz
   basePath: '/studio',
   
   images: {
