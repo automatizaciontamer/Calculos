@@ -1,39 +1,20 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  // Exportación estática obligatoria para GitHub Pages
+  // Exportación estática para GitHub Pages
   output: 'export',
   distDir: 'out',
   
-  // CONFIGURACIÓN CRÍTICA PARA GITHUB PAGES
-  // Al ser tu repositorio 'https://github.com/automatizaciontamer/studio', el basePath debe ser '/studio'
+  // CONFIGURACIÓN PARA https://github.com/automatizaciontamer/studio
   basePath: '/studio',
-  assetPrefix: '/studio/',
-
+  
   images: {
     unoptimized: true,
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
-      },
-    ],
   },
+
+  // Obliga a que todas las rutas terminen en / para que GitHub Pages las encuentre
   trailingSlash: true,
+
   typescript: {
     ignoreBuildErrors: true,
   },
