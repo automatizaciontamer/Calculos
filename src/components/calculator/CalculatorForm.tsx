@@ -40,7 +40,7 @@ export default function CalculatorForm() {
   const [eff, setEff] = useState("90");
   const [length, setLength] = useState("50");
   const [section, setSection] = useState("2.5");
-  const [maxVd, setMaxVd] = useState("11.4");
+  const [maxVdPercent, setMaxVdPercent] = useState("3"); // Porcentaje por defecto (3%)
   const [includeNeutral, setIncludeNeutral] = useState(false);
   const [isSingleCore, setIsSingleCore] = useState(false);
 
@@ -100,7 +100,7 @@ export default function CalculatorForm() {
     const effNum = parseFloat(eff) || 100;
     const lengthNum = parseFloat(length) || 0;
     const sectionNum = parseFloat(section) || 0;
-    const maxVdNum = parseFloat(maxVd) || 0;
+    const maxVdPercentNum = parseFloat(maxVdPercent) || 3;
 
     let res: any = null;
     switch (activeTab) {
@@ -111,7 +111,11 @@ export default function CalculatorForm() {
         res = calculateCurrent(powerNum, voltageNum, system, system === 'DC' ? 1 : pfNum);
         break;
       case "seccion":
-        res = calculateCableSection(currentNum, lengthNum, maxVdNum, system, material, system === 'DC' ? 1 : pfNum, includeNeutral, isSingleCore);
+        // Calcular la caída de tensión absoluta en voltios basada en el porcentaje ingresado
+        const maxVdVolts = (maxVdPercentNum / 100) * voltageNum;
+        res = calculateCableSection(currentNum, lengthNum, maxVdVolts, system, material, system === 'DC' ? 1 : pfNum, includeNeutral, isSingleCore);
+        // Adjuntar el valor calculado en voltios al resultado para mostrar en el informe
+        res = { ...res, maxVdVolts };
         break;
       case "caida":
         res = calculateVoltageDrop(currentNum, lengthNum, sectionNum, system, material, system === 'DC' ? 1 : pfNum);
@@ -496,15 +500,15 @@ export default function CalculatorForm() {
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            <Label className="text-xs uppercase font-bold text-muted-foreground">Caída de Tensión Máx. (ΔV en Voltios)</Label>
+                            <Label className="text-xs uppercase font-bold text-muted-foreground">Caída de Tensión Máx. (%)</Label>
                             <input 
                               type="number" 
-                              value={maxVd} 
-                              onChange={(e) => setMaxVd(e.target.value)} 
+                              value={maxVdPercent} 
+                              onChange={(e) => setMaxVdPercent(e.target.value)} 
                               className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" 
-                              placeholder="Ejem: 6.6V (3% en 220V) o 11.4V (3% en 380V)"
+                              placeholder="Ejem: 3% Alumbrado / 5% Fuerza"
                             />
-                            <p className="text-[10px] text-muted-foreground italic">Referencia IEC: 3% Alumbrado / 5% Fuerza</p>
+                            <p className="text-[10px] text-muted-foreground italic">Referencia IEC 60364: 3% Alumbrado / 5% Fuerza</p>
                           </div>
                         )}
                       </>
@@ -589,11 +593,11 @@ export default function CalculatorForm() {
 
                     <div className="grid grid-cols-1 gap-3 mt-4 text-left">
                       <div className="bg-primary/5 p-3 rounded-xl border border-dashed text-[10px] leading-tight">
-                        <p className="font-bold text-primary mb-1">NOTAS TÉCNICAS:</p>
+                        <p className="font-bold text-primary mb-1">NOTAS TÉCNICAS (IEC 60364):</p>
                         <ul className="space-y-1 text-muted-foreground">
-                          <li>• Verificado por Ampacidad (IEC 60364-5-52).</li>
-                          <li>• Verificado por Caída de Tensión.</li>
-                          <li>• Formación sugerida para cable tipo subterráneo / industrial.</li>
+                          <li>• ΔV Máx Permitida: {result.maxVdVolts?.toFixed(2)}V ({maxVdPercent}%)</li>
+                          <li>• Verificado por Ampacidad (Servicio Continuo).</li>
+                          <li>• Secciones normalizadas según IEC 60228.</li>
                         </ul>
                       </div>
                     </div>
