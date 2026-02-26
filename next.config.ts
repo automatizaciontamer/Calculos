@@ -2,11 +2,15 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
+  // Exportación estática para compatibilidad con GitHub Pages y hosting web simple
   output: 'export',
   distDir: 'out',
-  // Si tu repositorio NO es el principal (usuario.github.io), 
-  // debes descomentar la línea de abajo y poner el nombre de tu repositorio.
-  // basePath: '/tamer-industrial-app', 
+  
+  // IMPORTANTE: Si tu repositorio en GitHub NO es el principal (usuario.github.io),
+  // descomenta la línea de abajo y pon el nombre de tu repositorio.
+  // Ejemplo: si tu repo es github.com/tamer/calculadora, pon '/calculadora'
+  // basePath: '/nombre-de-tu-repo',
+
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -30,7 +34,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  trailingSlash: true, // Ayuda con el ruteo estático en GitHub Pages
+  trailingSlash: true,
   typescript: {
     ignoreBuildErrors: true,
   },
