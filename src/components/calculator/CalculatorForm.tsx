@@ -175,6 +175,15 @@ export default function CalculatorForm() {
     }
   }, [resistorBandCount, activeTab]);
 
+  // Helper para formatear números según normativa ES (Punto miles, Coma decimales)
+  const formatNum = (num: number | undefined | null, decimals: number = 2) => {
+    if (num === undefined || num === null) return "0";
+    return new Intl.NumberFormat('es-AR', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(num);
+  };
+
   return (
     <div className="w-full space-y-6">
       <Card className="shadow-2xl border-none bg-card/80 backdrop-blur-md overflow-hidden rounded-3xl">
@@ -527,13 +536,13 @@ export default function CalculatorForm() {
                           <div className="space-y-1">
                             <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums tracking-tighter">
                               {result.value >= 1000000 
-                                ? (result.value / 1000000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' M'
+                                ? formatNum(result.value / 1000000, 2) + ' M'
                                 : result.value >= 1000 
-                                ? (result.value / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' k'
-                                : result.value.toLocaleString()}
+                                ? formatNum(result.value / 1000, 2) + ' k'
+                                : formatNum(result.value, 0)}
                               <span className="text-2xl ml-1">Ω</span>
                             </h3>
-                            <p className="text-sm font-bold text-accent">±{result.tolerance}% Tolerancia</p>
+                            <p className="text-sm font-bold text-accent">±{formatNum(result.tolerance, 1)}% Tolerancia</p>
                           </div>
                           <div className="relative h-16 w-full flex items-center justify-center bg-muted/20 rounded-2xl border-2 border-dashed border-primary/20 p-2">
                              <div className="h-6 w-full max-w-[200px] bg-slate-300 rounded-full flex items-center px-4 gap-2">
@@ -547,7 +556,7 @@ export default function CalculatorForm() {
                         <div className="w-full space-y-4 relative z-10">
                           <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5">SECCIÓN COMERCIAL RECOMENDADA</p>
                           <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums tracking-tighter">
-                            {result.commercial}
+                            {formatNum(result.commercial, 1)}
                             <span className="text-2xl ml-2 text-primary/60">mm²</span>
                           </h3>
                           <div className="bg-white p-4 rounded-2xl border-2 border-accent/20 shadow-lg">
@@ -565,12 +574,12 @@ export default function CalculatorForm() {
                             {transMode === 'FORWARD' ? (result.isLinear ? 'VELOCIDAD LINEAL' : 'VELOCIDAD FINAL') : 'RPM MOTOR REQUERIDA'}
                           </p>
                           <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums">
-                            {result.resultValue?.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                            {formatNum(result.resultValue, 1)}
                             <span className="text-xl ml-2 text-primary/60">{transMode === 'FORWARD' && result.isLinear ? 'mm/s' : 'RPM'}</span>
                           </h3>
                           <div className="bg-white p-5 rounded-2xl border shadow-sm">
                             <span className="block text-[10px] text-muted-foreground uppercase font-bold mb-2 tracking-widest">Relación Total (i)</span>
-                            <span className="text-3xl font-black text-accent">1 : {result.totalRatio?.toFixed(2)}</span>
+                            <span className="text-3xl font-black text-accent">1 : {formatNum(result.totalRatio, 2)}</span>
                           </div>
                         </div>
                       ) : activeTab === "climatizacion" && typeof result === 'object' && ('coolingPower' in result || 'airflow' in result) ? (
@@ -580,21 +589,21 @@ export default function CalculatorForm() {
                             {result.mode === 'AC' ? 'POTENCIA FRIGORÍFICA' : 'CAUDAL VENTILACIÓN'}
                           </p>
                           <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums">
-                            {result.mode === 'AC' ? result.coolingPower?.toLocaleString() : result.airflow?.toLocaleString()}
+                            {result.mode === 'AC' ? formatNum(result.coolingPower, 0) : formatNum(result.airflow, 1)}
                             <span className="text-xl ml-2 text-primary/60">{result.mode === 'AC' ? 'W' : 'm³/h'}</span>
                           </h3>
                           <div className="grid grid-cols-2 gap-3 text-left">
                             <div className="bg-white p-3 rounded-xl border shadow-sm col-span-2">
                               <span className="block text-[9px] font-bold text-muted-foreground uppercase">Pérdidas Totales (Pv)</span>
-                              <span className="text-lg font-black text-primary">{result.totalPowerLoss?.toFixed(1)} W</span>
+                              <span className="text-lg font-black text-primary">{formatNum(result.totalPowerLoss, 1)} W</span>
                             </div>
                             <div className="bg-white p-3 rounded-xl border shadow-sm">
                               <span className="block text-[9px] font-bold text-muted-foreground uppercase">Superficie (A)</span>
-                              <span className="text-sm font-bold text-accent">{result.surfaceArea?.toFixed(2)} m²</span>
+                              <span className="text-sm font-bold text-accent">{formatNum(result.surfaceArea, 2)} m²</span>
                             </div>
                             <div className="bg-white p-3 rounded-xl border shadow-sm">
                               <span className="block text-[9px] font-bold text-muted-foreground uppercase">ΔT</span>
-                              <span className="text-sm font-bold text-accent">{result.deltaT} °C</span>
+                              <span className="text-sm font-bold text-accent">{formatNum(result.deltaT, 1)} °C</span>
                             </div>
                           </div>
                         </div>
@@ -602,22 +611,22 @@ export default function CalculatorForm() {
                         <div className="w-full space-y-4 relative z-10 text-left">
                           <div className="bg-white p-4 rounded-2xl border-2 border-accent/20 shadow-md">
                             <p className="text-[10px] font-bold text-primary uppercase mb-1">AJUSTE RELÉ TÉRMICO (Ir)</p>
-                            <h3 className="text-4xl font-black text-accent tabular-nums">{result.relaySetting?.toFixed(2)} A</h3>
+                            <h3 className="text-4xl font-black text-accent tabular-nums">{formatNum(result.relaySetting, 2)} A</h3>
                           </div>
                           <div className="bg-white p-4 rounded-2xl border shadow-sm space-y-3">
                             <h4 className="text-[10px] font-bold text-muted-foreground uppercase border-b pb-1 tracking-widest">CONTACTORES (KM)</h4>
                             <div className="grid grid-cols-3 gap-2">
                               <div className="p-2 bg-primary/5 rounded-lg border text-center">
                                 <span className="block text-[8px] font-bold text-muted-foreground">KM1 (L)</span>
-                                <span className="text-xs font-black">{result.contactorMain?.toFixed(1)}A</span>
+                                <span className="text-xs font-black">{formatNum(result.contactorMain, 1)}A</span>
                               </div>
                               <div className="p-2 bg-primary/5 rounded-lg border text-center">
                                 <span className="block text-[8px] font-bold text-muted-foreground">KM2 (Δ)</span>
-                                <span className="text-xs font-black">{result.contactorDelta?.toFixed(1)}A</span>
+                                <span className="text-xs font-black">{formatNum(result.contactorDelta, 1)}A</span>
                               </div>
                               <div className="p-2 bg-primary/5 rounded-lg border text-center">
                                 <span className="block text-[8px] font-bold text-muted-foreground">KM3 (Y)</span>
-                                <span className="text-xs font-black">{result.contactorStar?.toFixed(1)}A</span>
+                                <span className="text-xs font-black">{formatNum(result.contactorStar, 1)}A</span>
                               </div>
                             </div>
                           </div>
@@ -636,7 +645,7 @@ export default function CalculatorForm() {
                               <Activity className="h-4 w-4 text-primary" />
                               <div>
                                 <span className="block text-[10px] font-bold text-muted-foreground">CORRIENTE NOMINAL (In)</span>
-                                <span className="text-sm font-black">{result.nominalCurrent?.toFixed(2)} A</span>
+                                <span className="text-sm font-black">{formatNum(result.nominalCurrent, 2)} A</span>
                               </div>
                             </div>
                           </div>
@@ -645,7 +654,7 @@ export default function CalculatorForm() {
                         <div className="w-full space-y-4 relative z-10">
                           <p className="text-sm font-bold text-primary uppercase tracking-widest">VALOR RESULTANTE</p>
                           <h3 className="text-6xl md:text-7xl font-black text-primary tabular-nums tracking-tighter">
-                            {typeof result === 'number' ? result.toLocaleString(undefined, { maximumFractionDigits: 3 }) : '0'}
+                            {formatNum(result, 3)}
                             <span className="text-2xl ml-2 text-primary/60">
                               {activeTab === "potencia" ? "W" : activeTab === "corriente" ? "A" : activeTab === "caida" ? "V" : "mm²"}
                             </span>
@@ -663,42 +672,42 @@ export default function CalculatorForm() {
                         {activeTab === "potencia" && (
                           <div className="space-y-1">
                             <p className="font-bold text-primary">P = {system === 'TRI' ? '√3' : system === 'BI' ? '2' : '1'} × V × I × cosφ</p>
-                            <p className="text-muted-foreground">P = {system === 'TRI' ? '1.732' : system === 'BI' ? '2' : '1'} × {v}V × {i}A × {pf}</p>
+                            <p className="text-muted-foreground">P = {system === 'TRI' ? '1,732' : system === 'BI' ? '2' : '1'} × {v}V × {i}A × {pf}</p>
                           </div>
                         )}
                         {activeTab === "corriente" && (
                           <div className="space-y-1">
                             <p className="font-bold text-primary">I = P / ({system === 'TRI' ? '√3' : system === 'BI' ? '2' : '1'} × V × cosφ)</p>
-                            <p className="text-muted-foreground">I = {p}W / ({system === 'TRI' ? '1.732' : system === 'BI' ? '2' : '1'} × {v}V × {pf})</p>
+                            <p className="text-muted-foreground">I = {p}W / ({system === 'TRI' ? '1,732' : system === 'BI' ? '2' : '1'} × {v}V × {pf})</p>
                           </div>
                         )}
                         {activeTab === "seccion" && result?.params && (
                           <div className="space-y-2">
                             <p className="font-bold text-primary">1. Criterio Caída Tensión (ΔV):</p>
-                            <p className="text-muted-foreground">S_vd = ({result.params.system === 'TRI' ? '√3' : '2'} × {result.params.L}m × {result.params.I}A × {result.params.pf}) / ({result.params.k} × {result.params.Vd.toFixed(2)}V)</p>
+                            <p className="text-muted-foreground">S_vd = ({result.params.system === 'TRI' ? '√3' : '2'} × {result.params.L}m × {result.params.I}A × {result.params.pf}) / ({result.params.k} × {formatNum(result.params.Vd, 2)}V)</p>
                             <p className="font-bold text-primary mt-1">2. Criterio Ampacidad (IEC 60364):</p>
-                            <p className="text-muted-foreground">S_min para {result.params.I}A × 1.25 (FS)</p>
+                            <p className="text-muted-foreground">S_min para {result.params.I}A × 1,25 (FS)</p>
                             <p className="text-accent font-black mt-1">Resultado: Máximo entre (1) y (2)</p>
                           </div>
                         )}
                         {activeTab === "caida" && (
                           <div className="space-y-1">
                             <p className="font-bold text-primary">ΔV = ({system === 'TRI' ? '√3' : '2'} × L × I × cosφ) / (k × S)</p>
-                            <p className="text-muted-foreground">ΔV = ({system === 'TRI' ? '1.732' : '2'} × {length}m × {i}A × {pf}) / ({CONDUCTIVITY[material]} × {section}mm²)</p>
+                            <p className="text-muted-foreground">ΔV = ({system === 'TRI' ? '1,732' : '2'} × {length}m × {i}A × {pf}) / ({CONDUCTIVITY[material]} × {section}mm²)</p>
                           </div>
                         )}
                         {activeTab === "climatizacion" && result && (
                           <div className="space-y-2">
-                            <p className="font-bold text-primary">Pv (Pérdidas) = P_otros + (kW_vfd × 0.03)</p>
+                            <p className="font-bold text-primary">Pv (Pérdidas) = P_otros + (kW_vfd × 0,03)</p>
                             {coolingMode === 'AC' ? (
                               <>
                                 <p className="font-bold text-primary">P_ac = Pv - (k × A × ΔT)</p>
-                                <p className="text-muted-foreground">Pv = {result.totalPowerLoss?.toFixed(1)}W | A = {result.surfaceArea?.toFixed(2)}m² | ΔT = {result.deltaT}K</p>
+                                <p className="text-muted-foreground">Pv = {formatNum(result.totalPowerLoss, 1)}W | A = {formatNum(result.surfaceArea, 2)}m² | ΔT = {formatNum(result.deltaT, 1)}K</p>
                               </>
                             ) : (
                               <>
-                                <p className="font-bold text-primary">V (Caudal) = (3.1 × P_neto) / ΔT</p>
-                                <p className="text-muted-foreground">3.1 = Factor densidad aire (0m snm)</p>
+                                <p className="font-bold text-primary">V (Caudal) = (3,1 × P_neto) / ΔT</p>
+                                <p className="text-muted-foreground">3,1 = Factor densidad aire (0m snm)</p>
                               </>
                             )}
                           </div>
@@ -707,7 +716,7 @@ export default function CalculatorForm() {
                           <div className="space-y-2">
                             <p className="font-bold text-primary">In = P / (√3 × V × cosφ × η)</p>
                             <p className="font-bold text-primary">Ir (Relé) = In / √3</p>
-                            <p className="text-muted-foreground">In = {p}W / (1.732 × {v}V × {pf} × {parseFloat(eff)/100})</p>
+                            <p className="text-muted-foreground">In = {p}W / (1,732 × {v}V × {pf} × {parseFloat(eff)/100})</p>
                           </div>
                         )}
                         {activeTab === "proteccion" && (
@@ -716,7 +725,7 @@ export default function CalculatorForm() {
                             {motorProtectionType === 'GUARDAMOTOR' ? (
                               <p className="font-bold text-primary">Ajuste = In ± 10%</p>
                             ) : (
-                              <p className="font-bold text-primary">Térmica = In × 1.25 (Curva D)</p>
+                              <p className="font-bold text-primary">Térmica = In × 1,25 (Curva D)</p>
                             )}
                           </div>
                         )}
