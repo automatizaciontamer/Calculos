@@ -5,9 +5,10 @@ const nextConfig: NextConfig = {
   output: 'export',
   distDir: 'out',
   
-  // IMPORTANTE: Si tu repositorio en GitHub NO se llama "nombre-usuario.github.io"
-  // sino que tiene un nombre como "mi-calculadora", debes poner ese nombre abajo:
-  // basePath: '/mi-calculadora',
+  // IMPORTANTE: Cambia 'tamer-industrial-app' por el nombre exacto de tu repositorio en GitHub
+  // Si tu repo se llama 'mi-calculadora', debe ser '/mi-calculadora'
+  basePath: '/tamer-industrial-app',
+  assetPrefix: '/tamer-industrial-app/',
 
   images: {
     unoptimized: true,
