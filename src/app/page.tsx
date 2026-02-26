@@ -9,7 +9,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto mb-8 text-center md:text-left flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-3xl md:text-4xl font-black text-primary tracking-tight leading-tight">
-              Tamer <span className="text-accent">Industrial S.A.</span>
+              Tamer <span className="text-accent">Ind. S.A.</span>
             </h1>
             <p className="text-muted-foreground text-sm md:text-lg max-w-xl">
               Software para asistencia en calculos para oficina Automatizacion.
