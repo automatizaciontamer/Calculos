@@ -5,8 +5,8 @@ const nextConfig: NextConfig = {
   output: 'export',
   distDir: 'out',
   
-  // IMPORTANTE: Si tu repositorio se llama "mi-calculadora", 
-  // debes descomentar la línea de abajo y poner el nombre exacto:
+  // IMPORTANTE: Si tu repositorio en GitHub NO se llama "nombre-usuario.github.io"
+  // sino que tiene un nombre como "mi-calculadora", debes poner ese nombre abajo:
   // basePath: '/mi-calculadora',
 
   images: {
