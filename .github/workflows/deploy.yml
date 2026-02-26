@@ -1,12 +1,9 @@
-
-# Workflow para desplegar Next.js en GitHub Pages
+# Workflow para desplegar Next.js en GitHub Pages de forma automatizada
 name: Deploy to GitHub Pages
 
 on:
   push:
     branches: ["main"]
-
-  # Permite ejecutar este workflow manualmente desde la pestaña Actions
   workflow_dispatch:
 
 permissions:

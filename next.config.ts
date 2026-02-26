@@ -1,15 +1,14 @@
-
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  // Exportación estática para compatibilidad con GitHub Pages y hosting web simple
+  // Exportación estática obligatoria para GitHub Pages
   output: 'export',
   distDir: 'out',
   
-  // IMPORTANTE: Si tu repositorio en GitHub NO es el principal (usuario.github.io),
-  // descomenta la línea de abajo y pon el nombre de tu repositorio.
-  // Ejemplo: si tu repo es github.com/tamer/calculadora, pon '/calculadora'
-  // basePath: '/nombre-de-tu-repo',
+  // IMPORTANTE: Si tu repo NO es 'usuario.github.io', 
+  // debes poner el nombre de tu repositorio aquí abajo.
+  // Ejemplo: basePath: '/calculadora-tamer',
+  // basePath: '',
 
   images: {
     unoptimized: true,
