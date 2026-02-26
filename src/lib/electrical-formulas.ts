@@ -249,9 +249,6 @@ export const calculatePanelCooling = (
       mode: 'AC'
     };
   } else {
-    // Fórmulas para ventilación forzada: V [m3/h] = (f * Pv) / ΔT
-    // f = 3.1 para aire a nivel del mar.
-    // Usamos el neto de potencia a disipar si es positivo.
     const airflow = netPowerToCool > 0 ? (3.1 * netPowerToCool) / Math.abs(deltaT || 1) : 0;
     return {
       airflow: airflow,
@@ -307,21 +304,26 @@ export const calculateMotorProtection = (
   const section = getAmpacitySection(nominalCurrent);
   
   let protectionSetting = "";
+  let protectionRange = { min: 0, max: 0 };
+  let breakerRating = 0;
+
   if (type === 'GUARDAMOTOR') {
-    // Rango sugerido +/- 10%
-    const min = nominalCurrent * 0.9;
-    const max = nominalCurrent * 1.1;
-    protectionSetting = `${min.toFixed(1)} - ${max.toFixed(1)} A`;
+    protectionRange = {
+      min: nominalCurrent * 0.9,
+      max: nominalCurrent * 1.1
+    };
+    protectionSetting = "range";
   } else {
-    // Termomagnética curva D o K (1.25x In para evitar disparo por arranque)
     const target = nominalCurrent * 1.25;
-    const rating = BREAKER_RATINGS.find(r => r >= target) || BREAKER_RATINGS[BREAKER_RATINGS.length - 1];
-    protectionSetting = `${rating} A (Curva D/K)`;
+    breakerRating = BREAKER_RATINGS.find(r => r >= target) || BREAKER_RATINGS[BREAKER_RATINGS.length - 1];
+    protectionSetting = "breaker";
   }
 
   return {
     nominalCurrent,
     protectionSetting,
+    protectionRange,
+    breakerRating,
     section,
     commercialSection: getCommercialSection(section)
   };

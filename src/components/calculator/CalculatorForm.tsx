@@ -208,13 +208,12 @@ export default function CalculatorForm() {
               <TabsTrigger value="caida" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Caída</TabsTrigger>
               <TabsTrigger value="climatizacion" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Clima</TabsTrigger>
               <TabsTrigger value="estrella" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Y-Δ</TabsTrigger>
-              <TabsTrigger value="proteccion" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">DOL Prot.</TabsTrigger>
+              <TabsTrigger value="proteccion" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Protección</TabsTrigger>
               <TabsTrigger value="transmision" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Mecánica</TabsTrigger>
               <TabsTrigger value="resistencia" className="py-2.5 text-[10px] sm:text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-white transition-all">Color Ω</TabsTrigger>
             </TabsList>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-              {/* Form Side */}
               <div className="lg:col-span-3 space-y-6">
                 {(activeTab !== "climatizacion" && activeTab !== "estrella" && activeTab !== "transmision" && activeTab !== "resistencia" && activeTab !== "proteccion") && (
                   <div className="space-y-2">
@@ -516,7 +515,6 @@ export default function CalculatorForm() {
                 </Button>
               </div>
 
-              {/* Results Side */}
               <div className="lg:col-span-2 bg-primary/[0.03] rounded-3xl p-6 md:p-8 border-2 border-primary/10 flex flex-col items-center justify-start text-center relative overflow-hidden min-h-[500px]">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -mr-16 -mt-16" />
                 
@@ -631,7 +629,7 @@ export default function CalculatorForm() {
                             </div>
                           </div>
                         </div>
-                      ) : activeTab === "proteccion" && typeof result === 'object' && 'protectionSetting' in result ? (
+                      ) : activeTab === "proteccion" && typeof result === 'object' && 'nominalCurrent' in result ? (
                         <div className="w-full space-y-6 relative z-10 text-left">
                           <p className="text-[10px] font-bold text-primary uppercase tracking-widest text-center flex items-center gap-2 justify-center">
                             <ShieldAlert className="h-4 w-4" /> PROTECCIÓN
@@ -640,7 +638,11 @@ export default function CalculatorForm() {
                             <span className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">
                               {motorProtectionType === 'GUARDAMOTOR' ? 'AJUSTE SUGERIDO (Ir)' : 'CALIBRE DEL INTERRUPTOR'}
                             </span>
-                            <h3 className="text-4xl font-black text-primary">{result.protectionSetting}</h3>
+                            <h3 className="text-4xl font-black text-primary">
+                              {result.protectionSetting === 'range' 
+                                ? `${formatNum(result.protectionRange.min, 1)} - ${formatNum(result.protectionRange.max, 1)} A`
+                                : `${result.breakerRating} A (Curva D/K)`}
+                            </h3>
                             <div className="mt-4 p-3 bg-primary/5 rounded-xl border border-dashed flex items-center gap-3">
                               <Activity className="h-4 w-4 text-primary" />
                               <div>
@@ -663,7 +665,6 @@ export default function CalculatorForm() {
                       )}
                     </div>
 
-                    {/* Formula Transparency Section - ALWAYS AT BOTTOM */}
                     <div className="mt-8 pt-6 border-t border-dashed border-primary/20 text-left space-y-3 z-10">
                       <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-widest">
                         <Calculator className="h-3.5 w-3.5" /> Transparencia Matemática
