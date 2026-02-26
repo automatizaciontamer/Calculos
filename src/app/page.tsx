@@ -9,7 +9,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto mb-8 text-center md:text-left flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-3xl md:text-4xl font-black text-primary tracking-tight leading-tight">
-              Electro<span className="text-accent">Calculadora</span>
+              Tamer <span className="text-accent">Industrial S.A.</span>
             </h1>
             <p className="text-muted-foreground text-sm md:text-lg max-w-xl">
               Software de ingeniería para diseño y normalización de sistemas industriales y electromecánicos.
@@ -79,7 +79,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="max-w-5xl mx-auto mt-16 pt-8 border-t text-center text-muted-foreground text-[11px] md:text-[12px] px-4">
-          <p>© {new Date().getFullYear()} ElectroCalculadora. Ingeniería industrial normalizada por estándares internacionales.</p>
+          <p>© {new Date().getFullYear()} Tamer Industrial S.A. Ingeniería industrial normalizada por estándares internacionales.</p>
         </footer>
       </div>
     </main>
