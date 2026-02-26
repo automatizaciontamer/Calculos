@@ -23,9 +23,10 @@ import {
   calculateTransmission,
   calculateResistor,
   TransmissionStage,
-  CONDUCTIVITY 
+  CONDUCTIVITY,
+  COMMERCIAL_SECTIONS
 } from "@/lib/electrical-formulas";
-import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake, Settings2, Plus, Trash2, ArrowRightLeft, MoveHorizontal, Cpu, Palette, ShieldAlert, Wind } from "lucide-react";
+import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake, Settings2, Plus, Trash2, ArrowRightLeft, MoveHorizontal, Cpu, Palette, ShieldAlert, Wind, Calculator } from "lucide-react";
 
 export default function CalculatorForm() {
   const [activeTab, setActiveTab] = useState("potencia");
@@ -111,11 +112,21 @@ export default function CalculatorForm() {
         res = calculateCurrent(powerNum, voltageNum, system, system === 'DC' ? 1 : pfNum);
         break;
       case "seccion":
-        // Calcular la caída de tensión absoluta en voltios basada en el porcentaje ingresado
         const maxVdVolts = (maxVdPercentNum / 100) * voltageNum;
         res = calculateCableSection(currentNum, lengthNum, maxVdVolts, system, material, system === 'DC' ? 1 : pfNum, includeNeutral, isSingleCore);
-        // Adjuntar el valor calculado en voltios al resultado para mostrar en el informe
-        res = { ...res, maxVdVolts };
+        // Información adicional para transparencia de fórmula
+        res = { 
+          ...res, 
+          maxVdVolts,
+          params: {
+            L: lengthNum,
+            I: currentNum,
+            Vd: maxVdVolts,
+            k: CONDUCTIVITY[material],
+            pf: system === 'DC' ? 1 : pfNum,
+            system
+          }
+        };
         break;
       case "caida":
         res = calculateVoltageDrop(currentNum, lengthNum, sectionNum, system, material, system === 'DC' ? 1 : pfNum);
@@ -315,12 +326,12 @@ export default function CalculatorForm() {
                         <Label className="text-xs uppercase font-bold text-muted-foreground">
                           {transMode === 'FORWARD' ? 'Velocidad Motor (RPM)' : (transMotionType === 'LINEAR' ? 'Velocidad Final (mm/s)' : 'Velocidad Final (RPM)')}
                         </Label>
-                        <input type="number" value={transSpeed} onChange={(e) => setTransSpeed(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                        <Input type="number" value={transSpeed} onChange={(e) => setTransSpeed(e.target.value)} className="h-11 rounded-xl" />
                       </div>
                       {transMotionType === 'LINEAR' && (
                         <div className="space-y-2">
                           <Label className="text-xs uppercase font-bold text-muted-foreground">Paso / Avance (mm/rev)</Label>
-                          <input type="number" value={linearLead} onChange={(e) => setLinearLead(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" placeholder="Ejem: 5mm (husillo)" />
+                          <Input type="number" value={linearLead} onChange={(e) => setLinearLead(e.target.value)} className="h-11 rounded-xl" placeholder="Ejem: 5mm (husillo)" />
                         </div>
                       )}
                     </div>
@@ -337,11 +348,11 @@ export default function CalculatorForm() {
                           <div key={idx} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] items-end gap-3 p-4 bg-muted/20 rounded-2xl border border-primary/5">
                             <div className="space-y-1.5">
                               <Label className="text-[10px] uppercase font-bold text-muted-foreground">Entrada (Z1 / D1)</Label>
-                              <input type="number" value={stage.input} onChange={(e) => handleUpdateStage(idx, 'input', e.target.value)} className="flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                              <Input type="number" value={stage.input} onChange={(e) => handleUpdateStage(idx, 'input', e.target.value)} className="h-10 rounded-lg" />
                             </div>
                             <div className="space-y-1.5">
                               <Label className="text-[10px] uppercase font-bold text-muted-foreground">Salida (Z2 / D2)</Label>
-                              <input type="number" value={stage.output} onChange={(e) => handleUpdateStage(idx, 'output', e.target.value)} className="flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                              <Input type="number" value={stage.output} onChange={(e) => handleUpdateStage(idx, 'output', e.target.value)} className="h-10 rounded-lg" />
                             </div>
                             <Button variant="ghost" size="icon" onClick={() => handleRemoveStage(idx)} className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-lg" disabled={transStages.length === 1}>
                               <Trash2 className="h-4 w-4" />
@@ -389,27 +400,27 @@ export default function CalculatorForm() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Cant. VFDs</Label>
-                      <input type="number" value={vfdCount} onChange={(e) => setVfdCount(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                      <Input type="number" value={vfdCount} onChange={(e) => setVfdCount(e.target.value)} className="h-11 rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Potencia VFD (kW)</Label>
-                      <input type="number" value={vfdPowerKw} onChange={(e) => setVfdPowerKw(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                      <Input type="number" value={vfdPowerKw} onChange={(e) => setVfdPowerKw(e.target.value)} className="h-11 rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Ancho (mm)</Label>
-                      <input type="number" value={panelW} onChange={(e) => setPanelW(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                      <Input type="number" value={panelW} onChange={(e) => setPanelW(e.target.value)} className="h-11 rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Alto (mm)</Label>
-                      <input type="number" value={panelH} onChange={(e) => setPanelH(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                      <Input type="number" value={panelH} onChange={(e) => setPanelH(e.target.value)} className="h-11 rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">T. Int Máx (°C)</Label>
-                      <input type="number" value={tInt} onChange={(e) => setTInt(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                      <Input type="number" value={tInt} onChange={(e) => setTInt(e.target.value)} className="h-11 rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">T. Ext Máx (°C)</Label>
-                      <input type="number" value={tExt} onChange={(e) => setTExt(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                      <Input type="number" value={tExt} onChange={(e) => setTExt(e.target.value)} className="h-11 rounded-xl" />
                     </div>
                   </div>
                 ) : (activeTab === "estrella" || activeTab === "proteccion") ? (
@@ -439,19 +450,19 @@ export default function CalculatorForm() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs uppercase font-bold text-muted-foreground">Potencia Motor (W)</Label>
-                        <input type="number" value={p} onChange={(e) => setP(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        <Input type="number" value={p} onChange={(e) => setP(e.target.value)} className="h-11 rounded-xl" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs uppercase font-bold text-muted-foreground">Tensión (V)</Label>
-                        <input type="number" value={v} onChange={(e) => setV(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        <Input type="number" value={v} onChange={(e) => setV(e.target.value)} className="h-11 rounded-xl" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs uppercase font-bold text-muted-foreground">cos φ (Placa)</Label>
-                        <input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        <Input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} className="h-11 rounded-xl" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs uppercase font-bold text-muted-foreground">Rendimiento η (%)</Label>
-                        <input type="number" value={eff} onChange={(e) => setEff(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        <Input type="number" value={eff} onChange={(e) => setEff(e.target.value)} className="h-11 rounded-xl" />
                       </div>
                     </div>
                   </div>
@@ -459,29 +470,29 @@ export default function CalculatorForm() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Tensión (V)</Label>
-                      <input type="number" value={v} onChange={(e) => setV(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                      <Input type="number" value={v} onChange={(e) => setV(e.target.value)} className="h-11 rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-bold text-muted-foreground">Corriente (A)</Label>
-                      <input type="number" value={i} onChange={(e) => setI(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                      <Input type="number" value={i} onChange={(e) => setI(e.target.value)} className="h-11 rounded-xl" />
                     </div>
                     {activeTab === "corriente" && (
                       <div className="space-y-2">
                         <Label className="text-xs uppercase font-bold text-muted-foreground">Potencia (W)</Label>
-                        <input type="number" value={p} onChange={(e) => setP(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        <Input type="number" value={p} onChange={(e) => setP(e.target.value)} className="h-11 rounded-xl" />
                       </div>
                     )}
                     {system !== "DC" && (
                       <div className="space-y-2">
                         <Label className="text-xs uppercase font-bold text-muted-foreground">Factor de Potencia</Label>
-                        <input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                        <Input type="number" step="0.01" value={pf} onChange={(e) => setPf(e.target.value)} className="h-11 rounded-xl" />
                       </div>
                     )}
                     {(activeTab === "seccion" || activeTab === "caida") && (
                       <>
                         <div className="space-y-2">
                           <Label className="text-xs uppercase font-bold text-muted-foreground">Longitud (m)</Label>
-                          <input type="number" value={length} onChange={(e) => setLength(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                          <Input type="number" value={length} onChange={(e) => setLength(e.target.value)} className="h-11 rounded-xl" />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-xs uppercase font-bold text-muted-foreground">Conductor (IEC 60228)</Label>
@@ -496,16 +507,16 @@ export default function CalculatorForm() {
                         {activeTab === "caida" ? (
                           <div className="space-y-2">
                             <Label className="text-xs uppercase font-bold text-muted-foreground">Sección (mm²)</Label>
-                            <input type="number" value={section} onChange={(e) => setSection(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                            <Input type="number" value={section} onChange={(e) => setSection(e.target.value)} className="h-11 rounded-xl" />
                           </div>
                         ) : (
                           <div className="space-y-2">
                             <Label className="text-xs uppercase font-bold text-muted-foreground">Caída de Tensión Máx. (%)</Label>
-                            <input 
+                            <Input 
                               type="number" 
                               value={maxVdPercent} 
                               onChange={(e) => setMaxVdPercent(e.target.value)} 
-                              className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" 
+                              className="h-11 rounded-xl" 
                               placeholder="Ejem: 3% Alumbrado / 5% Fuerza"
                             />
                             <p className="text-[10px] text-muted-foreground italic">Referencia IEC 60364: 3% Alumbrado / 5% Fuerza</p>
@@ -564,41 +575,57 @@ export default function CalculatorForm() {
                     </div>
                   </div>
                 ) : activeTab === "seccion" && typeof result === 'object' && 'commercial' in result ? (
-                  <div className="w-full space-y-6 relative z-10">
+                  <div className="w-full space-y-4 relative z-10 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                     <div>
                       <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5">SECCIÓN COMERCIAL RECOMENDADA</p>
-                      <h3 className="text-6xl md:text-7xl font-black text-primary tabular-nums tracking-tighter">
+                      <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums tracking-tighter">
                         {result.commercial}
                         <span className="text-2xl ml-2 text-primary/60">mm²</span>
                       </h3>
                       <p className="text-[11px] text-muted-foreground mt-1 font-bold">Cálculo teórico: {result.section?.toFixed(2)} mm²</p>
                     </div>
 
-                    <div className="bg-white p-5 rounded-2xl border-2 border-accent/20 shadow-lg scale-105">
+                    <div className="bg-white p-4 rounded-2xl border-2 border-accent/20 shadow-lg">
                       <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">FORMACIÓN DEL CONDUCTOR</p>
                       <div className="space-y-2">
-                        <span className="text-3xl font-black text-accent block">
+                        <span className="text-2xl font-black text-accent block">
                           {result.formation}
                         </span>
                         <div className="flex justify-center gap-2">
-                           <span className="px-2 py-1 bg-accent/10 text-accent text-[9px] font-black rounded uppercase">
+                           <span className="px-2 py-1 bg-accent/10 text-accent text-[8px] font-black rounded uppercase">
                              {result.descriptiveLabel}
                            </span>
-                           <span className="px-2 py-1 bg-primary/10 text-primary text-[9px] font-black rounded uppercase">
+                           <span className="px-2 py-1 bg-primary/10 text-primary text-[8px] font-black rounded uppercase">
                              {result.isSingleCore ? 'UNIFILAR' : 'MULTIPOLAR'}
                            </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3 mt-4 text-left">
-                      <div className="bg-primary/5 p-3 rounded-xl border border-dashed text-[10px] leading-tight">
-                        <p className="font-bold text-primary mb-1">NOTAS TÉCNICAS (IEC 60364):</p>
-                        <ul className="space-y-1 text-muted-foreground">
-                          <li>• ΔV Máx Permitida: {result.maxVdVolts?.toFixed(2)}V ({maxVdPercent}%)</li>
-                          <li>• Verificado por Ampacidad (Servicio Continuo).</li>
-                          <li>• Secciones normalizadas según IEC 60228.</li>
-                        </ul>
+                    {/* Transparencia de Fórmula */}
+                    <div className="bg-primary/5 p-4 rounded-2xl border border-dashed text-left space-y-3">
+                      <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
+                        <Calculator className="h-4 w-4" /> Transparencia de Cálculo
+                      </div>
+                      
+                      <div className="space-y-2 font-mono text-[10px]">
+                        <div className="p-2 bg-white rounded border">
+                          <p className="text-muted-foreground mb-1">1. Caída de Tensión (ΔV):</p>
+                          <p className="font-bold text-primary">
+                            S = ({result.params.system === 'TRI' ? '√3' : '2'} × {result.params.L}m × {result.params.I}A × {result.params.pf}) / ({result.params.k} × {result.params.Vd.toFixed(2)}V)
+                          </p>
+                          <p className="mt-1 text-accent font-black">S_teórica = {result.section.toFixed(3)} mm²</p>
+                        </div>
+                        
+                        <div className="p-2 bg-white rounded border">
+                          <p className="text-muted-foreground mb-1">2. Criterio de Ampacidad (IEC 60364):</p>
+                          <p className="font-bold text-primary">Mínimo térmico para {result.params.I}A: </p>
+                          <p className="text-accent font-black">S_min = {(result.commercial >= result.section ? result.commercial : result.section).toFixed(1)} mm²</p>
+                        </div>
+                        
+                        <p className="text-[9px] text-muted-foreground leading-tight italic">
+                          * El sistema selecciona el mayor entre ambos criterios para cumplir con seguridad y normativa.
+                        </p>
                       </div>
                     </div>
                   </div>
