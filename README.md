@@ -1,5 +1,5 @@
 
-# Tamer Ind. S.A. | Suite de Ingeniería Web
+# Tamer Industrial S.A. | Suite de Ingeniería Web
 
 Software profesional alojado en la web para asistencia en cálculos de ingeniería eléctrica, mecánica y climatización industrial, normalizado bajo estándares internacionales (IEC / ISO).
 
