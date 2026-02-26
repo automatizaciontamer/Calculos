@@ -5,10 +5,10 @@ const nextConfig: NextConfig = {
   output: 'export',
   distDir: 'out',
   
-  // IMPORTANTE: Cambia 'tamer-industrial-app' por el nombre exacto de tu repositorio en GitHub
-  // Si tu repo se llama 'mi-calculadora', debe ser '/mi-calculadora'
-  basePath: '/tamer-industrial-app',
-  assetPrefix: '/tamer-industrial-app/',
+  // CONFIGURACIÓN CRÍTICA PARA GITHUB PAGES
+  // Al ser tu repositorio 'https://github.com/automatizaciontamer/studio', el basePath debe ser '/studio'
+  basePath: '/studio',
+  assetPrefix: '/studio/',
 
   images: {
     unoptimized: true,

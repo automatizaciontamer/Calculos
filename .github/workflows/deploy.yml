@@ -1,4 +1,4 @@
-# Workflow para desplegar Next.js en GitHub Pages de forma automatizada
+# Workflow optimizado para desplegar Next.js en GitHub Pages
 name: Deploy to GitHub Pages
 
 on:
