@@ -1,19 +1,20 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  // Exportación estática para GitHub Pages
+  // Exportación estática necesaria para GitHub Pages
   output: 'export',
   distDir: 'out',
   
-  // CONFIGURACIÓN PARA https://github.com/automatizaciontamer/studio
-  // Usamos el basePath solo en producción para que el previsualizador del Studio funcione en la raíz
+  // IMPORTANTE: Este basePath debe coincidir con el nombre de tu repositorio en GitHub
+  // Si tu repo se llama "studio", mantenlo así.
+  // En desarrollo (Studio), Next.js detectará esta ruta automáticamente.
   basePath: '/studio',
   
   images: {
     unoptimized: true,
   },
 
-  // Obliga a que todas las rutas terminen en / para que GitHub Pages las encuentre
+  // Obliga a que todas las rutas terminen en / para que GitHub Pages no se pierda
   trailingSlash: true,
 
   typescript: {
