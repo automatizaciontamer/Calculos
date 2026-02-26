@@ -5,9 +5,8 @@ const nextConfig: NextConfig = {
   output: 'export',
   distDir: 'out',
   
-  // Si estamos en producción (GitHub Actions), usamos /studio
-  // En desarrollo (Studio local), usamos la raíz '' para evitar el error 404
-  basePath: process.env.NODE_ENV === 'production' ? '/studio' : '',
+  // Ajuste automático: usa /Calculos en producción (GitHub) y raíz en desarrollo (Studio)
+  basePath: process.env.NODE_ENV === 'production' ? '/Calculos' : '',
   
   images: {
     unoptimized: true,
