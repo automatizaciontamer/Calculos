@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -5,7 +6,7 @@ const nextConfig: NextConfig = {
   output: 'export',
   distDir: 'out',
   
-  // Ajuste automático: usa /Calculos en producción (GitHub) y raíz en desarrollo (Studio)
+  // Ajuste automático: usa /Calculos en producción y raíz en desarrollo
   basePath: process.env.NODE_ENV === 'production' ? '/Calculos' : '',
   
   images: {
