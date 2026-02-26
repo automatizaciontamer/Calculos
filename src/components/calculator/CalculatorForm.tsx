@@ -41,7 +41,7 @@ export default function CalculatorForm() {
   const [eff, setEff] = useState("90");
   const [length, setLength] = useState("50");
   const [section, setSection] = useState("2.5");
-  const [maxVdPercent, setMaxVdPercent] = useState("3"); // Porcentaje por defecto (3%)
+  const [maxVdPercent, setMaxVdPercent] = useState("3"); 
   const [includeNeutral, setIncludeNeutral] = useState(false);
   const [isSingleCore, setIsSingleCore] = useState(false);
 
@@ -65,7 +65,7 @@ export default function CalculatorForm() {
   const [transSpeed, setTransSpeed] = useState("1450");
   const [transMode, setTransMode] = useState<'FORWARD' | 'REVERSE'>('FORWARD');
   const [transMotionType, setTransMotionType] = useState<'ROTARY' | 'LINEAR'>('ROTARY');
-  const [linearLead, setLinearLead] = useState("5"); // mm/rev
+  const [linearLead, setLinearLead] = useState("5"); 
   const [transStages, setTransStages] = useState<TransmissionStage[]>([{ input: 1, output: 1 }]);
 
   // Inputs Resistencia
@@ -114,18 +114,10 @@ export default function CalculatorForm() {
       case "seccion":
         const maxVdVolts = (maxVdPercentNum / 100) * voltageNum;
         res = calculateCableSection(currentNum, lengthNum, maxVdVolts, system, material, system === 'DC' ? 1 : pfNum, includeNeutral, isSingleCore);
-        // Información adicional para transparencia de fórmula
         res = { 
           ...res, 
           maxVdVolts,
-          params: {
-            L: lengthNum,
-            I: currentNum,
-            Vd: maxVdVolts,
-            k: CONDUCTIVITY[material],
-            pf: system === 'DC' ? 1 : pfNum,
-            system
-          }
+          params: { L: lengthNum, I: currentNum, Vd: maxVdVolts, k: CONDUCTIVITY[material], pf: system === 'DC' ? 1 : pfNum, system, V: voltageNum }
         };
         break;
       case "caida":
@@ -133,17 +125,9 @@ export default function CalculatorForm() {
         break;
       case "climatizacion":
         res = calculatePanelCooling(
-          parseFloat(panelW),
-          parseFloat(panelH),
-          parseFloat(panelD),
-          parseFloat(otherPowerLoss),
-          parseFloat(vfdCount),
-          parseFloat(vfdPowerKw),
-          parseFloat(tInt),
-          parseFloat(tExt),
-          panelMaterial,
-          installation,
-          coolingMode
+          parseFloat(panelW), parseFloat(panelH), parseFloat(panelD),
+          parseFloat(otherPowerLoss), parseFloat(vfdCount), parseFloat(vfdPowerKw),
+          parseFloat(tInt), parseFloat(tExt), panelMaterial, installation, coolingMode
         );
         break;
       case "estrella":
@@ -154,11 +138,7 @@ export default function CalculatorForm() {
         break;
       case "transmision":
         res = calculateTransmission(
-          parseFloat(transSpeed), 
-          transStages, 
-          transMode, 
-          transMotionType === 'LINEAR', 
-          parseFloat(linearLead)
+          parseFloat(transSpeed), transStages, transMode, transMotionType === 'LINEAR', parseFloat(linearLead)
         );
         break;
       case "resistencia":
@@ -171,19 +151,13 @@ export default function CalculatorForm() {
   const getNormativeReference = () => {
     switch(activeTab) {
       case "seccion":
-      case "caida":
-        return "IEC 60364 / IRAM 2178";
-      case "climatizacion":
-        return "IEC 60890";
+      case "caida": return "IEC 60364 / IRAM 2178";
+      case "climatizacion": return "IEC 60890";
       case "estrella":
-      case "proteccion":
-        return "IEC 60947-4-1 / 60364";
-      case "transmision":
-        return transMotionType === 'LINEAR' ? "ISO 13012" : "ISO 6336";
-      case "resistencia":
-        return "IEC 60062";
-      default:
-        return "IEC 60038 / 60364";
+      case "proteccion": return "IEC 60947-4-1 / 60364";
+      case "transmision": return transMotionType === 'LINEAR' ? "ISO 13012" : "ISO 6336";
+      case "resistencia": return "IEC 60062";
+      default: return "IEC 60038 / 60364";
     }
   };
 
@@ -534,264 +508,235 @@ export default function CalculatorForm() {
               </div>
 
               {/* Results Side */}
-              <div className="lg:col-span-2 bg-primary/[0.03] rounded-3xl p-6 md:p-8 border-2 border-primary/10 flex flex-col items-center justify-center text-center relative overflow-hidden min-h-[400px]">
+              <div className="lg:col-span-2 bg-primary/[0.03] rounded-3xl p-6 md:p-8 border-2 border-primary/10 flex flex-col items-center justify-start text-center relative overflow-hidden min-h-[500px]">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -mr-16 -mt-16" />
                 
                 {result === null ? (
-                  <div className="text-muted-foreground relative z-10 py-12">
+                  <div className="text-muted-foreground relative z-10 py-12 flex flex-col items-center justify-center h-full">
                     <Info className="h-16 w-16 mx-auto mb-6 text-primary/20" />
                     <p className="text-sm font-medium px-4">Complete los parámetros técnicos para generar el informe basado en normativa IEC.</p>
                   </div>
-                ) : activeTab === "resistencia" && typeof result === 'object' && 'value' in result ? (
-                  <div className="w-full space-y-6 relative z-10">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-1.5">
-                      <Palette className="h-4 w-4" /> VALOR DE RESISTENCIA
-                    </p>
-                    <div className="space-y-1">
-                      <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums tracking-tighter">
-                        {result.value >= 1000000 
-                          ? (result.value / 1000000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' M'
-                          : result.value >= 1000 
-                          ? (result.value / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' k'
-                          : result.value.toLocaleString()}
-                        <span className="text-2xl ml-1">Ω</span>
-                      </h3>
-                      <p className="text-sm font-bold text-accent">±{result.tolerance}% Tolerancia</p>
-                    </div>
-
-                    <div className="relative h-16 w-full flex items-center justify-center bg-muted/20 rounded-2xl border-2 border-dashed border-primary/20 p-2">
-                       <div className="h-6 w-full max-w-[200px] bg-slate-300 rounded-full flex items-center px-4 gap-2">
-                          {resistorBands.map((band, i) => (
-                            <div key={i} className="h-full w-2 shadow-sm" style={{ backgroundColor: RESISTOR_COLORS.find(c => c.color === band)?.hex }} />
-                          ))}
-                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3 mt-4 text-left">
-                      <div className="bg-primary/5 p-4 rounded-xl border border-dashed text-[10px] leading-tight">
-                        <p className="font-bold text-primary mb-1 uppercase">ESTÁNDAR IEC 60062:</p>
-                        <p className="text-muted-foreground">Sistema de codificación por colores para resistencias fijas. La última banda representa la precisión del componente.</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : activeTab === "seccion" && typeof result === 'object' && 'commercial' in result ? (
-                  <div className="w-full space-y-4 relative z-10 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                    <div>
-                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5">SECCIÓN COMERCIAL RECOMENDADA</p>
-                      <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums tracking-tighter">
-                        {result.commercial}
-                        <span className="text-2xl ml-2 text-primary/60">mm²</span>
-                      </h3>
-                      <p className="text-[11px] text-muted-foreground mt-1 font-bold">Cálculo teórico: {result.section?.toFixed(2)} mm²</p>
-                    </div>
-
-                    <div className="bg-white p-4 rounded-2xl border-2 border-accent/20 shadow-lg">
-                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">FORMACIÓN DEL CONDUCTOR</p>
-                      <div className="space-y-2">
-                        <span className="text-2xl font-black text-accent block">
-                          {result.formation}
-                        </span>
-                        <div className="flex justify-center gap-2">
-                           <span className="px-2 py-1 bg-accent/10 text-accent text-[8px] font-black rounded uppercase">
-                             {result.descriptiveLabel}
-                           </span>
-                           <span className="px-2 py-1 bg-primary/10 text-primary text-[8px] font-black rounded uppercase">
-                             {result.isSingleCore ? 'UNIFILAR' : 'MULTIPOLAR'}
-                           </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Transparencia de Fórmula */}
-                    <div className="bg-primary/5 p-4 rounded-2xl border border-dashed text-left space-y-3">
-                      <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
-                        <Calculator className="h-4 w-4" /> Transparencia de Cálculo
-                      </div>
-                      
-                      <div className="space-y-2 font-mono text-[10px]">
-                        <div className="p-2 bg-white rounded border">
-                          <p className="text-muted-foreground mb-1">1. Caída de Tensión (ΔV):</p>
-                          <p className="font-bold text-primary">
-                            S = ({result.params.system === 'TRI' ? '√3' : '2'} × {result.params.L}m × {result.params.I}A × {result.params.pf}) / ({result.params.k} × {result.params.Vd.toFixed(2)}V)
-                          </p>
-                          <p className="mt-1 text-accent font-black">S_teórica = {result.section.toFixed(3)} mm²</p>
-                        </div>
-                        
-                        <div className="p-2 bg-white rounded border">
-                          <p className="text-muted-foreground mb-1">2. Criterio de Ampacidad (IEC 60364):</p>
-                          <p className="font-bold text-primary">Mínimo térmico para {result.params.I}A: </p>
-                          <p className="text-accent font-black">S_min = {(result.commercial >= result.section ? result.commercial : result.section).toFixed(1)} mm²</p>
-                        </div>
-                        
-                        <p className="text-[9px] text-muted-foreground leading-tight italic">
-                          * El sistema selecciona el mayor entre ambos criterios para cumplir con seguridad y normativa.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : activeTab === "transmision" && typeof result === 'object' && 'resultValue' in result ? (
-                  <div className="w-full space-y-6 relative z-10">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-1.5">
-                      <Settings2 className="h-4 w-4" /> 
-                      {transMode === 'FORWARD' 
-                        ? (result.isLinear ? 'VELOCIDAD LINEAL CALCULADA' : 'VELOCIDAD FINAL CALCULADA')
-                        : 'VELOCIDAD REQUERIDA MOTOR'}
-                    </p>
-                    <div className="space-y-1">
-                      <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums">
-                        {result.resultValue?.toLocaleString(undefined, { maximumFractionDigits: 1 })}
-                      </h3>
-                      <span className="text-xl md:text-2xl font-bold text-primary/60">
-                        {transMode === 'FORWARD' && result.isLinear ? 'mm/s' : 'RPM'}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 mt-8">
-                      <div className="bg-white p-5 rounded-2xl border shadow-sm">
-                        <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-2">Relación de Transmisión (I)</span>
-                        <span className="text-3xl font-black text-accent">1 : {result.totalRatio?.toFixed(2)}</span>
-                        <p className="text-[10px] text-muted-foreground mt-2 font-medium">Factor de desmultiplicación mecánica</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : activeTab === "climatizacion" && typeof result === 'object' && ('coolingPower' in result || 'airflow' in result) ? (
-                  <div className="w-full space-y-6 relative z-10">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-1.5">
-                      {result.mode === 'AC' ? <ThermometerSnowflake className="h-4 w-4" /> : <Wind className="h-4 w-4" />}
-                      {result.mode === 'AC' ? 'POTENCIA FRIGORÍFICA REQUERIDA' : 'CAUDAL DE VENTILACIÓN REQUERIDO'}
-                    </p>
-                    <div className="space-y-1">
-                      <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums">
-                        {result.mode === 'AC' 
-                          ? result.coolingPower?.toLocaleString(undefined, { maximumFractionDigits: 1 })
-                          : result.airflow?.toLocaleString(undefined, { maximumFractionDigits: 1 })
-                        }
-                      </h3>
-                      <span className="text-xl md:text-2xl font-bold text-primary/60">
-                        {result.mode === 'AC' ? 'W' : 'm³/h'}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 mt-8 text-left">
-                      <div className="bg-white p-3 rounded-xl border shadow-sm col-span-2">
-                        <span className="block text-[9px] text-muted-foreground uppercase font-bold mb-1">Pérdidas Totales Disipadas (Pv)</span>
-                        <span className="text-lg font-black text-primary">{result.totalPowerLoss?.toFixed(1)} W</span>
-                      </div>
-                      <div className="bg-white p-3 rounded-xl border shadow-sm">
-                        <span className="block text-[9px] text-muted-foreground uppercase font-bold mb-1">Superficie (A)</span>
-                        <span className="text-sm font-bold text-accent">{result.surfaceArea?.toFixed(2)} m²</span>
-                      </div>
-                      <div className="bg-white p-3 rounded-xl border shadow-sm">
-                        <span className="block text-[9px] text-muted-foreground uppercase font-bold mb-1">ΔT Térmico</span>
-                        <span className="text-sm font-bold text-accent">{result.deltaT} °C</span>
-                      </div>
-                    </div>
-                    {result.airflow === 0 && result.mode === 'VENT' && result.totalPowerLoss > 0 && (
-                       <p className="text-[10px] text-green-600 font-bold bg-green-50 p-2 rounded-lg">La disipación pasiva de la superficie es suficiente.</p>
-                    )}
-                  </div>
-                ) : activeTab === "estrella" && typeof result === 'object' && 'relaySetting' in result ? (
-                  <div className="w-full space-y-4 relative z-10 text-left overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">
-                    <div className="bg-white p-4 rounded-2xl border-2 border-accent/20 shadow-md">
-                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Ajuste Relé Térmico (Ir)</p>
-                      <h3 className="text-4xl font-black text-accent tabular-nums flex items-baseline gap-2">
-                        {result.relaySetting?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                        <span className="text-lg font-bold">A</span>
-                      </h3>
-                      <p className="text-[9px] text-muted-foreground font-medium uppercase mt-1 tracking-tight">PROTECCIÓN BASADA EN CORRIENTE DE FASE (In/√3)</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3 mt-4">
-                      <div className="bg-white p-4 rounded-2xl border shadow-sm space-y-4">
-                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase border-b pb-2 flex items-center justify-between tracking-wider">
-                          <span>Contactores (IEC 60947-4-1)</span>
-                          <Cpu className="h-4 w-4 text-primary" />
-                        </h4>
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="p-2 bg-primary/5 rounded-lg border text-center">
-                            <span className="block text-[8px] font-bold text-muted-foreground">KM1 (LÍNEA)</span>
-                            <span className="text-sm font-black text-primary">{result.contactorMain?.toFixed(1)}A</span>
-                          </div>
-                          <div className="p-2 bg-primary/5 rounded-lg border text-center">
-                            <span className="block text-[8px] font-bold text-muted-foreground">KM2 (Δ)</span>
-                            <span className="text-sm font-black text-primary">{result.contactorDelta?.toFixed(1)}A</span>
-                          </div>
-                          <div className="p-2 bg-primary/5 rounded-lg border text-center">
-                            <span className="block text-[8px] font-bold text-muted-foreground">KM3 (Y)</span>
-                            <span className="text-sm font-black text-accent">{result.contactorStar?.toFixed(1)}A</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-white p-4 rounded-2xl border shadow-sm space-y-4">
-                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase border-b pb-2 flex items-center justify-between tracking-wider">
-                          <span>Conductores (IEC 60364)</span>
-                          <Ruler className="h-4 w-4 text-primary" />
-                        </h4>
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center p-2 bg-muted/20 rounded-lg">
-                            <div className="text-left">
-                              <span className="block text-[9px] font-bold text-muted-foreground">LÍNEA ALIMENTACIÓN (3P+PE)</span>
-                              <span className="text-sm font-black text-primary">Sección: {result.sectionMain} mm²</span>
-                            </div>
-                            <Box className="h-5 w-5 text-primary/30" />
-                          </div>
-                          <div className="flex justify-between items-center p-2 bg-accent/5 rounded-lg border-accent/20 border">
-                            <div className="text-left">
-                              <span className="block text-[9px] font-bold text-muted-foreground">CONEXIÓN MOTOR (6 HILOS)</span>
-                              <span className="text-sm font-black text-accent">Sección: {result.sectionMotor} mm²</span>
-                            </div>
-                            <ArrowRightLeft className="h-5 w-5 text-accent/30" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : activeTab === "proteccion" && typeof result === 'object' && 'protectionSetting' in result ? (
-                  <div className="w-full space-y-6 relative z-10 text-left">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center gap-1.5 justify-center">
-                      <ShieldAlert className="h-4 w-4" /> DIMENSIONAMIENTO DE PROTECCIÓN
-                    </p>
-                    
-                    <div className="bg-white p-5 rounded-3xl border-2 border-primary/10 shadow-lg space-y-4">
-                      <div>
-                        <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">
-                          {motorProtectionType === 'GUARDAMOTOR' ? 'AJUSTE SUGERIDO (Ir)' : 'CALIBRE DEL INTERRUPTOR'}
-                        </span>
-                        <h3 className="text-4xl font-black text-primary tabular-nums">
-                          {result.protectionSetting}
-                        </h3>
-                      </div>
-                      
-                      <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-dashed">
-                        <div className="p-2 bg-white rounded-lg shadow-sm">
-                          <Activity className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <span className="block text-[10px] text-muted-foreground font-bold">CORRIENTE NOMINAL (In)</span>
-                          <span className="text-sm font-black text-primary">{result.nominalCurrent?.toFixed(2)} A</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-accent/5 p-5 rounded-3xl border-2 border-accent/10 shadow-md space-y-2">
-                      <span className="block text-[10px] text-accent uppercase font-bold tracking-wider">CONDUCTOR RECOMENDADO (IEC 60364)</span>
-                      <h4 className="text-3xl font-black text-accent tabular-nums">
-                        {result.commercialSection} <span className="text-sm">mm²</span>
-                      </h4>
-                      <p className="text-[9px] text-muted-foreground leading-tight">
-                        Cálculo basado en ampacidad para servicio continuo de motor. Se recomienda verificar caída de tensión según longitud.
-                      </p>
-                    </div>
-                  </div>
                 ) : (
-                  <div className="w-full space-y-4 relative z-10">
-                    <p className="text-sm font-bold text-primary uppercase tracking-widest">VALOR RESULTANTE</p>
-                    <div className="space-y-1">
-                      <h3 className="text-6xl md:text-7xl font-black text-primary tabular-nums tracking-tighter">
-                        {typeof result === 'number' ? result.toLocaleString(undefined, { maximumFractionDigits: 3 }) : '0'}
-                      </h3>
-                      <span className="text-2xl md:text-3xl font-black text-primary/60">
-                        {activeTab === "potencia" ? "W" : activeTab === "corriente" ? "A" : activeTab === "seccion" ? "mm²" : "V"}
-                      </span>
+                  <div className="w-full h-full flex flex-col">
+                    <div className="flex-grow">
+                      {activeTab === "resistencia" && typeof result === 'object' && 'value' in result ? (
+                        <div className="w-full space-y-6 relative z-10">
+                          <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-1.5">
+                            <Palette className="h-4 w-4" /> VALOR DE RESISTENCIA
+                          </p>
+                          <div className="space-y-1">
+                            <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums tracking-tighter">
+                              {result.value >= 1000000 
+                                ? (result.value / 1000000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' M'
+                                : result.value >= 1000 
+                                ? (result.value / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' k'
+                                : result.value.toLocaleString()}
+                              <span className="text-2xl ml-1">Ω</span>
+                            </h3>
+                            <p className="text-sm font-bold text-accent">±{result.tolerance}% Tolerancia</p>
+                          </div>
+                          <div className="relative h-16 w-full flex items-center justify-center bg-muted/20 rounded-2xl border-2 border-dashed border-primary/20 p-2">
+                             <div className="h-6 w-full max-w-[200px] bg-slate-300 rounded-full flex items-center px-4 gap-2">
+                                {resistorBands.map((band, i) => (
+                                  <div key={i} className="h-full w-2 shadow-sm" style={{ backgroundColor: RESISTOR_COLORS.find(c => c.color === band)?.hex }} />
+                                ))}
+                             </div>
+                          </div>
+                        </div>
+                      ) : activeTab === "seccion" && typeof result === 'object' && 'commercial' in result ? (
+                        <div className="w-full space-y-4 relative z-10">
+                          <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5">SECCIÓN COMERCIAL RECOMENDADA</p>
+                          <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums tracking-tighter">
+                            {result.commercial}
+                            <span className="text-2xl ml-2 text-primary/60">mm²</span>
+                          </h3>
+                          <div className="bg-white p-4 rounded-2xl border-2 border-accent/20 shadow-lg">
+                            <span className="text-2xl font-black text-accent block">{result.formation}</span>
+                            <div className="flex justify-center gap-2 mt-2">
+                               <span className="px-2 py-1 bg-accent/10 text-accent text-[8px] font-black rounded uppercase">{result.descriptiveLabel}</span>
+                               <span className="px-2 py-1 bg-primary/10 text-primary text-[8px] font-black rounded uppercase">{result.isSingleCore ? 'UNIFILAR' : 'MULTIPOLAR'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : activeTab === "transmision" && typeof result === 'object' && 'resultValue' in result ? (
+                        <div className="w-full space-y-6 relative z-10">
+                          <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-1.5">
+                            <Settings2 className="h-4 w-4" /> 
+                            {transMode === 'FORWARD' ? (result.isLinear ? 'VELOCIDAD LINEAL' : 'VELOCIDAD FINAL') : 'RPM MOTOR REQUERIDA'}
+                          </p>
+                          <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums">
+                            {result.resultValue?.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                            <span className="text-xl ml-2 text-primary/60">{transMode === 'FORWARD' && result.isLinear ? 'mm/s' : 'RPM'}</span>
+                          </h3>
+                          <div className="bg-white p-5 rounded-2xl border shadow-sm">
+                            <span className="block text-[10px] text-muted-foreground uppercase font-bold mb-2 tracking-widest">Relación Total (i)</span>
+                            <span className="text-3xl font-black text-accent">1 : {result.totalRatio?.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      ) : activeTab === "climatizacion" && typeof result === 'object' && ('coolingPower' in result || 'airflow' in result) ? (
+                        <div className="w-full space-y-6 relative z-10">
+                          <p className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-1.5">
+                            {result.mode === 'AC' ? <ThermometerSnowflake className="h-4 w-4" /> : <Wind className="h-4 w-4" />}
+                            {result.mode === 'AC' ? 'POTENCIA FRIGORÍFICA' : 'CAUDAL VENTILACIÓN'}
+                          </p>
+                          <h3 className="text-5xl md:text-6xl font-black text-primary tabular-nums">
+                            {result.mode === 'AC' ? result.coolingPower?.toLocaleString() : result.airflow?.toLocaleString()}
+                            <span className="text-xl ml-2 text-primary/60">{result.mode === 'AC' ? 'W' : 'm³/h'}</span>
+                          </h3>
+                          <div className="grid grid-cols-2 gap-3 text-left">
+                            <div className="bg-white p-3 rounded-xl border shadow-sm col-span-2">
+                              <span className="block text-[9px] font-bold text-muted-foreground uppercase">Pérdidas Totales (Pv)</span>
+                              <span className="text-lg font-black text-primary">{result.totalPowerLoss?.toFixed(1)} W</span>
+                            </div>
+                            <div className="bg-white p-3 rounded-xl border shadow-sm">
+                              <span className="block text-[9px] font-bold text-muted-foreground uppercase">Superficie (A)</span>
+                              <span className="text-sm font-bold text-accent">{result.surfaceArea?.toFixed(2)} m²</span>
+                            </div>
+                            <div className="bg-white p-3 rounded-xl border shadow-sm">
+                              <span className="block text-[9px] font-bold text-muted-foreground uppercase">ΔT</span>
+                              <span className="text-sm font-bold text-accent">{result.deltaT} °C</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : activeTab === "estrella" && typeof result === 'object' && 'relaySetting' in result ? (
+                        <div className="w-full space-y-4 relative z-10 text-left">
+                          <div className="bg-white p-4 rounded-2xl border-2 border-accent/20 shadow-md">
+                            <p className="text-[10px] font-bold text-primary uppercase mb-1">AJUSTE RELÉ TÉRMICO (Ir)</p>
+                            <h3 className="text-4xl font-black text-accent tabular-nums">{result.relaySetting?.toFixed(2)} A</h3>
+                          </div>
+                          <div className="bg-white p-4 rounded-2xl border shadow-sm space-y-3">
+                            <h4 className="text-[10px] font-bold text-muted-foreground uppercase border-b pb-1 tracking-widest">CONTACTORES (KM)</h4>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="p-2 bg-primary/5 rounded-lg border text-center">
+                                <span className="block text-[8px] font-bold text-muted-foreground">KM1 (L)</span>
+                                <span className="text-xs font-black">{result.contactorMain?.toFixed(1)}A</span>
+                              </div>
+                              <div className="p-2 bg-primary/5 rounded-lg border text-center">
+                                <span className="block text-[8px] font-bold text-muted-foreground">KM2 (Δ)</span>
+                                <span className="text-xs font-black">{result.contactorDelta?.toFixed(1)}A</span>
+                              </div>
+                              <div className="p-2 bg-primary/5 rounded-lg border text-center">
+                                <span className="block text-[8px] font-bold text-muted-foreground">KM3 (Y)</span>
+                                <span className="text-xs font-black">{result.contactorStar?.toFixed(1)}A</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : activeTab === "proteccion" && typeof result === 'object' && 'protectionSetting' in result ? (
+                        <div className="w-full space-y-6 relative z-10 text-left">
+                          <p className="text-[10px] font-bold text-primary uppercase tracking-widest text-center flex items-center gap-2 justify-center">
+                            <ShieldAlert className="h-4 w-4" /> PROTECCIÓN
+                          </p>
+                          <div className="bg-white p-5 rounded-3xl border-2 border-primary/10 shadow-lg">
+                            <span className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">
+                              {motorProtectionType === 'GUARDAMOTOR' ? 'AJUSTE SUGERIDO (Ir)' : 'CALIBRE DEL INTERRUPTOR'}
+                            </span>
+                            <h3 className="text-4xl font-black text-primary">{result.protectionSetting}</h3>
+                            <div className="mt-4 p-3 bg-primary/5 rounded-xl border border-dashed flex items-center gap-3">
+                              <Activity className="h-4 w-4 text-primary" />
+                              <div>
+                                <span className="block text-[10px] font-bold text-muted-foreground">CORRIENTE NOMINAL (In)</span>
+                                <span className="text-sm font-black">{result.nominalCurrent?.toFixed(2)} A</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full space-y-4 relative z-10">
+                          <p className="text-sm font-bold text-primary uppercase tracking-widest">VALOR RESULTANTE</p>
+                          <h3 className="text-6xl md:text-7xl font-black text-primary tabular-nums tracking-tighter">
+                            {typeof result === 'number' ? result.toLocaleString(undefined, { maximumFractionDigits: 3 }) : '0'}
+                            <span className="text-2xl ml-2 text-primary/60">
+                              {activeTab === "potencia" ? "W" : activeTab === "corriente" ? "A" : activeTab === "caida" ? "V" : "mm²"}
+                            </span>
+                          </h3>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Formula Transparency Section - ALWAYS AT BOTTOM */}
+                    <div className="mt-8 pt-6 border-t border-dashed border-primary/20 text-left space-y-3 z-10">
+                      <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-widest">
+                        <Calculator className="h-3.5 w-3.5" /> Transparencia Matemática
+                      </div>
+                      <div className="bg-white/50 backdrop-blur-sm p-3 rounded-xl border border-primary/10 font-mono text-[9px] leading-relaxed">
+                        {activeTab === "potencia" && (
+                          <div className="space-y-1">
+                            <p className="font-bold text-primary">P = {system === 'TRI' ? '√3' : system === 'BI' ? '2' : '1'} × V × I × cosφ</p>
+                            <p className="text-muted-foreground">P = {system === 'TRI' ? '1.732' : system === 'BI' ? '2' : '1'} × {v}V × {i}A × {pf}</p>
+                          </div>
+                        )}
+                        {activeTab === "corriente" && (
+                          <div className="space-y-1">
+                            <p className="font-bold text-primary">I = P / ({system === 'TRI' ? '√3' : system === 'BI' ? '2' : '1'} × V × cosφ)</p>
+                            <p className="text-muted-foreground">I = {p}W / ({system === 'TRI' ? '1.732' : system === 'BI' ? '2' : '1'} × {v}V × {pf})</p>
+                          </div>
+                        )}
+                        {activeTab === "seccion" && result?.params && (
+                          <div className="space-y-2">
+                            <p className="font-bold text-primary">1. Criterio Caída Tensión (ΔV):</p>
+                            <p className="text-muted-foreground">S_vd = ({result.params.system === 'TRI' ? '√3' : '2'} × {result.params.L}m × {result.params.I}A × {result.params.pf}) / ({result.params.k} × {result.params.Vd.toFixed(2)}V)</p>
+                            <p className="font-bold text-primary mt-1">2. Criterio Ampacidad (IEC 60364):</p>
+                            <p className="text-muted-foreground">S_min para {result.params.I}A × 1.25 (FS)</p>
+                            <p className="text-accent font-black mt-1">Resultado: Máximo entre (1) y (2)</p>
+                          </div>
+                        )}
+                        {activeTab === "caida" && (
+                          <div className="space-y-1">
+                            <p className="font-bold text-primary">ΔV = ({system === 'TRI' ? '√3' : '2'} × L × I × cosφ) / (k × S)</p>
+                            <p className="text-muted-foreground">ΔV = ({system === 'TRI' ? '1.732' : '2'} × {length}m × {i}A × {pf}) / ({CONDUCTIVITY[material]} × {section}mm²)</p>
+                          </div>
+                        )}
+                        {activeTab === "climatizacion" && result && (
+                          <div className="space-y-2">
+                            <p className="font-bold text-primary">Pv (Pérdidas) = P_otros + (kW_vfd × 0.03)</p>
+                            {coolingMode === 'AC' ? (
+                              <>
+                                <p className="font-bold text-primary">P_ac = Pv - (k × A × ΔT)</p>
+                                <p className="text-muted-foreground">Pv = {result.totalPowerLoss?.toFixed(1)}W | A = {result.surfaceArea?.toFixed(2)}m² | ΔT = {result.deltaT}K</p>
+                              </>
+                            ) : (
+                              <>
+                                <p className="font-bold text-primary">V (Caudal) = (3.1 × P_neto) / ΔT</p>
+                                <p className="text-muted-foreground">3.1 = Factor densidad aire (0m snm)</p>
+                              </>
+                            )}
+                          </div>
+                        )}
+                        {activeTab === "estrella" && (
+                          <div className="space-y-2">
+                            <p className="font-bold text-primary">In = P / (√3 × V × cosφ × η)</p>
+                            <p className="font-bold text-primary">Ir (Relé) = In / √3</p>
+                            <p className="text-muted-foreground">In = {p}W / (1.732 × {v}V × {pf} × {parseFloat(eff)/100})</p>
+                          </div>
+                        )}
+                        {activeTab === "proteccion" && (
+                          <div className="space-y-2">
+                            <p className="font-bold text-primary">In = P / ({system === 'TRI' ? '√3' : '1'} × V × cosφ × η)</p>
+                            {motorProtectionType === 'GUARDAMOTOR' ? (
+                              <p className="font-bold text-primary">Ajuste = In ± 10%</p>
+                            ) : (
+                              <p className="font-bold text-primary">Térmica = In × 1.25 (Curva D)</p>
+                            )}
+                          </div>
+                        )}
+                        {activeTab === "transmision" && (
+                          <div className="space-y-1">
+                            <p className="font-bold text-primary">Relación Total (i) = (Z2/Z1) × (Z4/Z3) ...</p>
+                            {transMotionType === 'ROTARY' ? (
+                               <p className="font-bold text-primary">RPM_final = RPM_motor / i</p>
+                            ) : (
+                               <p className="font-bold text-primary">V_lineal = (RPM_final / 60) × Paso</p>
+                            )}
+                          </div>
+                        )}
+                        {activeTab === "resistencia" && (
+                          <div className="space-y-1">
+                            <p className="font-bold text-primary">Valor = (B1B2..BN) × 10^B_mult</p>
+                            <p className="text-muted-foreground">Basado en código de colores estándar IEC 60062.</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -805,15 +750,15 @@ export default function CalculatorForm() {
         <Card className="p-5 bg-white/40 backdrop-blur-sm border-dashed rounded-2xl flex gap-4 hover:bg-white/60 transition-colors">
           <MoveHorizontal className="h-8 w-8 text-primary shrink-0 p-1.5 bg-primary/10 rounded-xl" />
           <div className="text-sm space-y-1">
-            <h5 className="font-bold text-primary">Cinemática Lineal</h5>
-            <p className="text-muted-foreground text-xs leading-relaxed">Dimensionamiento de husillos y correas dentadas para servomotores con alta precisión milimétrica.</p>
+            <h5 className="font-bold text-primary">Cinemática Industrial</h5>
+            <p className="text-muted-foreground text-xs leading-relaxed">Dimensionamiento de husillos y transmisiones para automatización de alta precisión.</p>
           </div>
         </Card>
         <Card className="p-5 bg-white/40 backdrop-blur-sm border-dashed rounded-2xl flex gap-4 hover:bg-white/60 transition-colors">
           <ShieldCheck className="h-8 w-8 text-accent shrink-0 p-1.5 bg-accent/10 rounded-xl" />
           <div className="text-sm space-y-1">
-            <h5 className="font-bold text-primary">Trazabilidad Normativa</h5>
-            <p className="text-muted-foreground text-xs leading-relaxed">Cálculos auditables bajo estándares ISO 13012 para componentes de movimiento lineal industrial.</p>
+            <h5 className="font-bold text-primary">Trazabilidad Técnica</h5>
+            <p className="text-muted-foreground text-xs leading-relaxed">Fórmulas auditables y transparencia matemática total bajo normativas internacionales.</p>
           </div>
         </Card>
       </div>
