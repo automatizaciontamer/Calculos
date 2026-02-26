@@ -5,10 +5,9 @@ const nextConfig: NextConfig = {
   output: 'export',
   distDir: 'out',
   
-  // IMPORTANTE: Si tu repo NO es 'usuario.github.io', 
-  // debes poner el nombre de tu repositorio aquí abajo.
-  // Ejemplo: basePath: '/calculadora-tamer',
-  // basePath: '',
+  // IMPORTANTE: Si tu repositorio se llama "mi-calculadora", 
+  // debes descomentar la línea de abajo y poner el nombre exacto:
+  // basePath: '/mi-calculadora',
 
   images: {
     unoptimized: true,
