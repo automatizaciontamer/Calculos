@@ -12,7 +12,7 @@ export default function Home() {
               Tamer <span className="text-accent">Industrial S.A.</span>
             </h1>
             <p className="text-muted-foreground text-sm md:text-lg max-w-xl">
-              Software de ingeniería para diseño y normalización de sistemas industriales y electromecánicos.
+              Software para asistencia en calculos para oficina Automatizacion.
             </p>
           </div>
           <div className="flex gap-2 justify-center md:justify-end shrink-0">
