@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
   SystemType, 
   InstallationType,
@@ -26,7 +28,30 @@ import {
   CONDUCTIVITY,
   COMMERCIAL_SECTIONS
 } from "@/lib/electrical-formulas";
-import { Zap, Activity, Ruler, Info, Box, ShieldCheck, ThermometerSnowflake, Settings2, Plus, Trash2, ArrowRightLeft, MoveHorizontal, Cpu, Palette, ShieldAlert, Wind, Calculator } from "lucide-react";
+import { 
+  Zap, 
+  Activity, 
+  Ruler, 
+  Info, 
+  Box, 
+  ShieldCheck, 
+  ThermometerSnowflake, 
+  Settings2, 
+  Plus, 
+  Trash2, 
+  ArrowRightLeft, 
+  MoveHorizontal, 
+  Cpu, 
+  Palette, 
+  ShieldAlert, 
+  Wind, 
+  Calculator,
+  BookOpen,
+  FileText,
+  Layers,
+  CheckCircle2,
+  HardHat
+} from "lucide-react";
 
 export default function CalculatorForm() {
   const [activeTab, setActiveTab] = useState("potencia");
@@ -38,7 +63,7 @@ export default function CalculatorForm() {
   const [i, setI] = useState("10");
   const [p, setP] = useState("7500");
   const [pf, setPf] = useState("0.85");
-  const [eff, setEff] = useState("70"); // Actualizado a 70% por defecto según solicitud
+  const [eff, setEff] = useState("70"); 
   const [length, setLength] = useState("50");
   const [section, setSection] = useState("2.5");
   const [maxVdPercent, setMaxVdPercent] = useState("3"); 
@@ -175,7 +200,6 @@ export default function CalculatorForm() {
     }
   }, [resistorBandCount, activeTab]);
 
-  // Helper para formatear números según normativa ES (Punto miles, Coma decimales)
   const formatNum = (num: number | undefined | null, decimals: number = 2) => {
     if (num === undefined || num === null) return "0";
     return new Intl.NumberFormat('es-AR', {
@@ -188,8 +212,172 @@ export default function CalculatorForm() {
     <div className="w-full space-y-6">
       <Card className="shadow-2xl border-none bg-card/80 backdrop-blur-md overflow-hidden rounded-3xl">
         <CardHeader className="text-center pb-6 bg-primary/5 border-b mb-6 relative px-4 md:px-8">
-          <div className="hidden sm:flex absolute top-4 right-4 bg-primary text-white text-[10px] font-bold px-3 py-1.5 rounded-full items-center gap-1.5 shadow-sm">
-            <ShieldCheck className="h-3 w-3" /> {getNormativeReference()}
+          <div className="hidden lg:flex absolute top-4 right-4 items-center gap-3">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="bg-white border-primary/20 text-primary hover:bg-primary/5 rounded-full font-bold gap-2 text-[10px] md:text-xs">
+                  <BookOpen className="h-3.5 w-3.5" /> MANUAL TÉCNICO
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden border-none rounded-3xl">
+                <div className="bg-primary text-white p-6 md:p-8">
+                  <DialogHeader>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md">
+                        <FileText className="h-6 w-6 text-accent" />
+                      </div>
+                      <DialogTitle className="text-2xl font-black">Manual Técnico de Ingeniería</DialogTitle>
+                    </div>
+                    <DialogDescription className="text-primary-foreground/80 text-sm">
+                      Especificaciones normalizadas para el diseño, fabricación y montaje de tableros eléctricos industriales.
+                    </DialogDescription>
+                  </DialogHeader>
+                </div>
+                <ScrollArea className="h-[60vh] md:h-[70vh] p-6 md:p-10">
+                  <div className="space-y-12">
+                    {/* Sección 1: Diseño y Fabricación */}
+                    <section className="space-y-6">
+                      <h3 className="text-xl font-black text-primary flex items-center gap-2 border-b pb-2">
+                        <Layers className="h-5 w-5 text-accent" /> 1. Diseño y Fabricación (IEC 61439)
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                          <h4 className="font-bold text-sm text-muted-foreground uppercase tracking-widest">Grados de Protección</h4>
+                          <ul className="space-y-2 text-sm leading-relaxed">
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                              <span><strong>IP 54 / 65:</strong> Estanqueidad contra polvo y agua según entorno.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                              <span><strong>IK 10:</strong> Resistencia a impactos mecánicos externos.</span>
+                            </li>
+                          </ul>
+                        </div>
+                        <div className="space-y-3">
+                          <h4 className="font-bold text-sm text-muted-foreground uppercase tracking-widest">Segregación Interna</h4>
+                          <ul className="space-y-2 text-sm leading-relaxed">
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                              <span><strong>Forma 1:</strong> Sin segregación interna.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                              <span><strong>Forma 2-4:</strong> Separación de barras, unidades funcionales y bornes.</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </section>
+
+                    {/* Sección 2: Código de Colores */}
+                    <section className="space-y-6">
+                      <h3 className="text-xl font-black text-primary flex items-center gap-2 border-b pb-2">
+                        <Palette className="h-5 w-5 text-accent" /> 2. Código de Colores (IEC 60445)
+                      </h3>
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="font-bold">Función del Conductor</TableHead>
+                            <TableHead className="font-bold">Color Normalizado</TableHead>
+                            <TableHead className="font-bold">Aplicación</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell className="font-medium">Fases (L1, L2, L3)</TableCell>
+                            <TableCell>Marrón / Negro / Gris</TableCell>
+                            <TableCell>Potencia AC Trifásica</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">Neutro (N)</TableCell>
+                            <TableCell className="text-blue-600 font-bold">Azul Claro</TableCell>
+                            <TableCell>Retorno AC</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">Protección (PE)</TableCell>
+                            <TableCell className="text-green-600 font-bold">Verde / Amarillo</TableCell>
+                            <TableCell>Puesta a tierra</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">Control AC (Mando)</TableCell>
+                            <TableCell className="text-red-600 font-bold">Rojo</TableCell>
+                            <TableCell>Circuitos de maniobra AC</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">Control DC (24V)</TableCell>
+                            <TableCell className="text-blue-800 font-bold">Azul Oscuro</TableCell>
+                            <TableCell>Automatización / PLC</TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </section>
+
+                    {/* Sección 3: Dimensionamiento de Cables */}
+                    <section className="space-y-6">
+                      <h3 className="text-xl font-black text-primary flex items-center gap-2 border-b pb-2">
+                        <Ruler className="h-5 w-5 text-accent" /> 3. Secciones y Ampacidad (IEC 60364)
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Referencia rápida para conductores de Cobre (PVC 70°C) en canalización cerrada.
+                      </p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                          { s: "1,5", i: "14,5" },
+                          { s: "2,5", i: "19,5" },
+                          { s: "4", i: "26" },
+                          { s: "6", i: "34" },
+                          { s: "10", i: "46" },
+                          { s: "16", i: "61" },
+                          { s: "25", i: "80" },
+                          { s: "35", i: "99" }
+                        ].map((item, idx) => (
+                          <div key={idx} className="p-3 bg-white border rounded-2xl shadow-sm flex flex-col items-center">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase">Sección</span>
+                            <span className="text-lg font-black text-primary">{item.s} mm²</span>
+                            <div className="w-full h-px bg-muted my-1" />
+                            <span className="text-xs font-bold text-accent">{item.i} A máx.</span>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    {/* Sección 4: Tensiones Normalizadas */}
+                    <section className="space-y-6 pb-6">
+                      <h3 className="text-xl font-black text-primary flex items-center gap-2 border-b pb-2">
+                        <Zap className="h-5 w-5 text-accent" /> 4. Tensiones Estándar (IEC 60038)
+                      </h3>
+                      <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10">
+                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                          <li className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-accent" />
+                            <span><strong>Baja Tensión AC:</strong> 230V / 400V (50/60 Hz)</span>
+                          </li>
+                          <li className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-accent" />
+                            <span><strong>Control Industrial:</strong> 24V DC / 110V AC</span>
+                          </li>
+                          <li className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-accent" />
+                            <span><strong>Tolerancia admitida:</strong> ± 10% (IEC 60038)</span>
+                          </li>
+                          <li className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-accent" />
+                            <span><strong>Seguridad (SELV):</strong> &lt; 50V AC / 120V DC</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </section>
+                  </div>
+                </ScrollArea>
+                <div className="bg-muted/30 p-4 border-t text-center">
+                  <p className="text-[10px] font-bold text-muted-foreground">TAMER INDUSTRIAL S.A. | SOFTWARE DE ASISTENCIA TÉCNICA NORMALIZADA</p>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <div className="px-3 md:px-4 py-1.5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center gap-1.5 shadow-sm border border-white/20">
+              <ShieldCheck className="h-3 w-3 text-accent" /> {getNormativeReference()}
+            </div>
           </div>
           <CardTitle className="text-2xl md:text-3xl font-black text-primary flex flex-col md:flex-row items-center justify-center gap-2">
             <Zap className="h-8 w-8 text-accent fill-accent" />
