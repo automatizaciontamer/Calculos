@@ -5,26 +5,24 @@ Software profesional alojado en la web para asistencia en cálculos de ingenier�
 
 ## 🚀 Guía para Vincular con GitHub (Terminal)
 
-Si recibes el error "remote origin already exists", ejecuta estos comandos en orden:
+Si tienes problemas para subir el código al repositorio **Calculos**, sigue estos comandos en orden:
 
 ### 1. Corregir y Vincular
 ```bash
-# Eliminar el vínculo antiguo si existe
+# 1. Eliminar cualquier vínculo antiguo
 git remote remove origin
 
-# Agregar el vínculo CORRECTO al repositorio Calculos
+# 2. Agregar el vínculo al repositorio ACTUAL
 git remote add origin https://github.com/automatizaciontamer/Calculos.git
 
-# Agregar todos los archivos
+# 3. Preparar los archivos
 git add .
+git commit -m "Despliegue: Calculos (Formato y Protección)"
 
-# Crear el commit
-git commit -m "Despliegue final: Calculos"
-
-# Asegurar que estamos en la rama main
+# 4. Asegurar la rama principal
 git branch -M main
 
-# Subir archivos con FUERZA para limpiar el repo
+# 5. Subir archivos (usa --force para limpiar el historial del repo nuevo)
 git push -u origin main --force
 ```
 
