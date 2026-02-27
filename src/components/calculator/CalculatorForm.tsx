@@ -212,10 +212,11 @@ export default function CalculatorForm() {
     <div className="w-full space-y-6">
       <Card className="shadow-2xl border-none bg-card/80 backdrop-blur-md overflow-hidden rounded-3xl">
         <CardHeader className="text-center pb-6 bg-primary/5 border-b mb-6 relative px-4 md:px-8">
-          <div className="hidden lg:flex absolute top-4 right-4 items-center gap-3">
+          {/* Botón de Manual Técnico - Ahora visible en todos los dispositivos */}
+          <div className="flex flex-col sm:flex-row absolute top-3 right-3 sm:top-4 sm:right-4 items-end sm:items-center gap-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="bg-white border-primary/20 text-primary hover:bg-primary/5 rounded-full font-bold gap-2 text-[10px] md:text-xs">
+                <Button variant="outline" size="sm" className="bg-white border-primary/20 text-primary hover:bg-primary/5 rounded-full font-bold gap-2 text-[10px] md:text-xs shadow-sm">
                   <BookOpen className="h-3.5 w-3.5" /> MANUAL TÉCNICO
                 </Button>
               </DialogTrigger>
@@ -226,7 +227,7 @@ export default function CalculatorForm() {
                       <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md">
                         <FileText className="h-6 w-6 text-accent" />
                       </div>
-                      <DialogTitle className="text-2xl font-black">Manual Técnico de Ingeniería</DialogTitle>
+                      <DialogTitle className="text-2xl font-black text-white">Manual Técnico de Ingeniería</DialogTitle>
                     </div>
                     <DialogDescription className="text-primary-foreground/80 text-sm">
                       Especificaciones normalizadas para el diseño, fabricación y montaje de tableros eléctricos industriales.
@@ -277,7 +278,7 @@ export default function CalculatorForm() {
                       </h3>
                       <Table>
                         <TableHeader>
-                          <TableRow className="bg-muted/50">
+                          <TableRow className="bg-muted/50 hover:bg-muted/50">
                             <TableHead className="font-bold">Función del Conductor</TableHead>
                             <TableHead className="font-bold">Color Normalizado</TableHead>
                             <TableHead className="font-bold">Aplicación</TableHead>
@@ -379,7 +380,8 @@ export default function CalculatorForm() {
               <ShieldCheck className="h-3 w-3 text-accent" /> {getNormativeReference()}
             </div>
           </div>
-          <CardTitle className="text-2xl md:text-3xl font-black text-primary flex flex-col md:flex-row items-center justify-center gap-2">
+
+          <CardTitle className="text-2xl md:text-3xl font-black text-primary flex flex-col md:flex-row items-center justify-center gap-2 mt-12 sm:mt-0">
             <Zap className="h-8 w-8 text-accent fill-accent" />
             Ingeniería Industrial IEC
           </CardTitle>
