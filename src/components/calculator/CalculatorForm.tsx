@@ -38,7 +38,7 @@ export default function CalculatorForm() {
   const [i, setI] = useState("10");
   const [p, setP] = useState("7500");
   const [pf, setPf] = useState("0.85");
-  const [eff, setEff] = useState("90");
+  const [eff, setEff] = useState("70"); // Actualizado a 70% por defecto según solicitud
   const [length, setLength] = useState("50");
   const [section, setSection] = useState("2.5");
   const [maxVdPercent, setMaxVdPercent] = useState("3"); 
